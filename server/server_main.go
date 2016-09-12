@@ -1,10 +1,30 @@
-// client_main.go
-package client_main
+// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
 
 import (
-	"fmt"
+	"flag"
+	"log"
+	"net/http"
 )
 
+var addr = flag.String("addr", ":8081", "http service address")
+
 func main() {
-	fmt.Println("Hello World!")
+	flag.Parse()
+
+	lobby := NewLobby()
+	hub := NewHub()
+	hub.appendConnectionStateChangeLIstener(lobby)
+	hub.appendIncomingMessageLIstener(lobby)
+	go hub.loop()
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		hub.HandleWebsocket(w, r)
+	})
+	err := http.ListenAndServe(*addr, nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }

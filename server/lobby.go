@@ -24,13 +24,6 @@ const (
 	STATE_CHANGE
 )
 
-type Room struct {
-	id RoomId
-
-	seats     []UserId
-	audiences map[UserId]bool
-}
-
 type User struct {
 	id       UserId
 	username string
@@ -110,7 +103,8 @@ func (l *Lobby) notifyIncomingMessage(conn *Connection, message []byte) (err err
 			return l.handleJoinRoomMessage(conn, userMessage)
 		case "LEAVE_ROOM":
 			return l.handleLeaveRoomMessage(conn, userMessage)
-		case "STATE_CHANGE":
+		case "ROOM_STATE_CHANGE":
+			return l.handleRoomStateChangeMessage(conn, userMessage)
 		}
 	} else {
 		// Should never happen
@@ -143,41 +137,65 @@ func (l *Lobby) handleLoginMessage(conn *Connection, message map[string]interfac
 
 func (l *Lobby) handleCreateRoomMessage(conn *Connection, message map[string]interface{}) (err error) {
 	if user, ok := l.userConnMap[conn]; ok {
-		audiences := make(map[UserId]bool)
-		audiences[user.id] = true
+		if _, ok := l.userInRoomMap[user.id]; ok {
+			return nil
+		}
+		observerUsers := make(map[UserId]bool)
+		observerUsers[user.id] = true
 		room := &Room{
-			id:        RoomId(l.idGen.GetNextId()),
-			seats:     make([]UserId, 0),
-			audiences: audiences,
+			id:            RoomId(l.idGen.GetNextId()),
+			status:        RoomStatus(0),
+			seatedUsers:   make([]UserId, 0),
+			observerUsers: observerUsers,
 		}
 		l.rooms[room.id] = room
 		l.userInRoomMap[user.id] = room
 
 		l.BroadcastUserCreateRoom(user, room)
+		l.SyncRoomState(user, room)
 	}
 	return nil
 }
 
 func (l *Lobby) handleJoinRoomMessage(conn *Connection, message map[string]interface{}) (err error) {
 	if user, ok := l.userConnMap[conn]; ok {
+		if _, ok := l.userInRoomMap[user.id]; ok {
+			return nil
+		}
 		roomId := RoomId(message["room_id"].(float64))
 		room := l.rooms[roomId]
 		l.userInRoomMap[user.id] = room
 
-		room.audiences[user.id] = true
+		room.observerUsers[user.id] = true
 
 		l.BroadcastUserJoinRoom(user, room)
+		l.SyncRoomState(user, room)
 	}
 	return nil
 }
 
 func (l *Lobby) handleLeaveRoomMessage(conn *Connection, message map[string]interface{}) (err error) {
 	if user, ok := l.userConnMap[conn]; ok {
+		if _, ok := l.userInRoomMap[user.id]; !ok {
+			return nil
+		}
 		roomId := message["room_id"].(RoomId)
 		room := l.rooms[roomId]
-		delete(room.audiences, user.id)
+		delete(room.observerUsers, user.id)
 		l.userInRoomMap[user.id] = nil
 		l.BroadcastUserLeaveRoom(user)
+	}
+	return nil
+}
+
+func (l *Lobby) handleRoomStateChangeMessage(conn *Connection, message map[string]interface{}) (err error) {
+	if user, ok := l.userConnMap[conn]; ok {
+		if _, ok := l.userInRoomMap[user.id]; !ok {
+			return nil
+		}
+		roomId := message["room_id"].(RoomId)
+		room := l.rooms[roomId]
+		room.handleMessage(user, message)
 	}
 	return nil
 }
@@ -203,8 +221,7 @@ func (l *Lobby) SyncLobbyState(user *User) {
 		}
 	}
 	for _, r := range l.rooms {
-		room := make(map[string]interface{})
-		room["id"] = int64(r.id)
+		room := r.serializeRoomAbstract()
 		rooms = append(rooms, room)
 	}
 	message["users"] = users
@@ -221,6 +238,7 @@ func (l *Lobby) SyncLobbyState(user *User) {
 func (l *Lobby) SyncRoomState(user *User, room *Room) {
 	message := make(map[string]interface{})
 	message["type"] = "SYNC_ROOM_STATE"
+	message["room"] = room.serializeRoom()
 
 	str, err := json.Marshal(message)
 	if err != nil {

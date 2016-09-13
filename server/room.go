@@ -1,5 +1,10 @@
 package main
 
+import (
+	"encoding/json"
+	"log"
+)
+
 type RoomStatus int8
 
 const (
@@ -77,4 +82,22 @@ func (r *Room) handleStartPlayingMessage(user *User, message map[string]interfac
 
 func (r *Room) handleGameMessage(user *User, message map[string]interface{}) (err error) {
 	return nil
+}
+
+func (r *Room) BroadcastRoomStateChange(message map[string]interface{}) {
+	str, err := json.Marshal(message)
+	if err != nil {
+		log.Println("BroadcastRoomStateChange error")
+		return
+	}
+	for _, u := range r.seatedUsers {
+		if user, ok := r.lobby.userIdMap[u]; ok {
+			user.conn.sendBuffer <- str
+		}
+	}
+	for u, _ := range r.observerUsers {
+		if user, ok := r.lobby.userIdMap[u]; ok {
+			user.conn.sendBuffer <- str
+		}
+	}
 }

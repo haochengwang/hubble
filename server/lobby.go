@@ -35,6 +35,7 @@ type User struct {
 type Lobby struct {
 	// Users and connections
 	anonymousConn map[*Connection]bool
+	userIdMap     map[UserId]*User
 	userConnMap   map[*Connection]*User
 	userStateMap  map[int8]map[UserId]*User
 
@@ -53,6 +54,7 @@ func NewLobby() *Lobby {
 	userStateMap[LOST_CONN] = make(map[UserId]*User)
 	return &Lobby{
 		anonymousConn: make(map[*Connection]bool),
+		userIdMap:     make(map[UserId]*User),
 		userConnMap:   make(map[*Connection]*User),
 		userStateMap:  userStateMap,
 		rooms:         make(map[RoomId]*Room),
@@ -70,6 +72,7 @@ func (l *Lobby) notifyUnregister(conn *Connection) (err error) {
 	if _, ok := l.anonymousConn[conn]; ok {
 		delete(l.anonymousConn, conn)
 	} else if user, ok := l.userConnMap[conn]; ok {
+		delete(l.userIdMap, user.id)
 		delete(l.userConnMap, conn)
 		delete(l.userStateMap[user.state], user.id)
 		l.userStateMap[LOST_CONN][user.id] = user
@@ -125,6 +128,7 @@ func (l *Lobby) handleLoginMessage(conn *Connection, message map[string]interfac
 		username: username,
 		nickname: username,
 	}
+	l.userIdMap[user.id] = user
 	l.userConnMap[conn] = user
 	l.userStateMap[ACTIVE][user.id] = user
 

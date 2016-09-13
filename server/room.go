@@ -25,15 +25,14 @@ func (r *Room) serializeRoom() (result map[string]interface{}) {
 	result = make(map[string]interface{})
 	result["id"] = r.id
 	result["status"] = r.status
-
-	allAttendees := make([]int64, 0)
-	for _, u := range r.seatedUsers {
-		allAttendees = append(allAttendees, int64(u))
+	result["seated_users"] = make(map[int64]interface{})
+	for i, u := range r.seatedUsers {
+		result["seated_users"].(map[int64]interface{})[int64(i)] = int64(u)
 	}
+	result["observer_users"] = make([]int64, 0)
 	for u, _ := range r.observerUsers {
-		allAttendees = append(allAttendees, int64(u))
+		result["observer_users"] = append(result["observer_users"].([]int64), int64(u))
 	}
-	result["attendees"] = allAttendees
 	return
 }
 
@@ -69,14 +68,62 @@ func (r *Room) handleMessage(user *User, message map[string]interface{}) (err er
 }
 
 func (r *Room) handleToSeatMessage(user *User, message map[string]interface{}) (err error) {
+	if r.status != WAITING {
+		return nil
+	}
+	seat_id := int64(message["seat_id"].(float64))
+	if r.seatedUsers[seat_id] == user.id || r.seatedUsers[seat_id] != 0 {
+		return nil
+	}
+
+	for i, u := range r.seatedUsers {
+		if u == user.id {
+			r.seatedUsers[i] = UserId(0)
+		}
+	}
+
+	delete(r.observerUsers, user.id)
+	r.seatedUsers[seat_id] = user.id
+
+	m := make(map[string]interface{})
+	m["type"] = "TO_SEAT"
+	m["user_id"] = user.id
+	m["seat_id"] = seat_id
+	r.BroadcastRoomStateChange(m)
 	return nil
 }
 
 func (r *Room) handleLeaveSeatMessage(user *User, message map[string]interface{}) (err error) {
+	if r.status != WAITING {
+		return nil
+	}
+
+	seat_id := int64(-1)
+	for i, u := range r.seatedUsers {
+		if u == user.id {
+			r.seatedUsers[i] = UserId(0)
+			seat_id = int64(i)
+			break
+		}
+	}
+	if seat_id < 0 {
+		return nil
+	}
+	m := make(map[string]interface{})
+	m["type"] = "LEAVE_SEAT"
+	m["user_id"] = user.id
+	r.BroadcastRoomStateChange(m)
 	return nil
 }
 
 func (r *Room) handleStartPlayingMessage(user *User, message map[string]interface{}) (err error) {
+	if r.status != WAITING {
+		return nil
+	}
+	r.status = PLAYING
+	m := make(map[string]interface{})
+	m["type"] = "START_PLAYING"
+	r.BroadcastRoomStateChange(m)
 	return nil
 }
 

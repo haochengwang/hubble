@@ -149,7 +149,7 @@ func (l *Lobby) handleCreateRoomMessage(conn *Connection, message map[string]int
 		room := &Room{
 			id:            RoomId(l.idGen.GetNextId()),
 			status:        RoomStatus(0),
-			seatedUsers:   make([]UserId, 0),
+			seatedUsers:   make([]UserId, 8),
 			observerUsers: observerUsers,
 		}
 		l.rooms[room.id] = room

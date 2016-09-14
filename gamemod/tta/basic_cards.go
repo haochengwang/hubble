@@ -785,7 +785,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:                  2,
 		cardType:             []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts:     []int{4, 4, 4},
-		productionCulture:    3,
+		productionCulture:    2,
 		productionWhiteToken: 1,
 		productionRedToken:   1,
 		productionHappiness:  -1,

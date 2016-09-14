@@ -74,12 +74,32 @@ type Card struct {
 
 type CardStack []Card
 
+func pushCard(stack CardStack, card Card, position int) CardStack {
+	if position == len(stack) {
+		return append(stack, card)
+	}
+	return append(append(stack[:position], card), stack[position:]...)
+}
+
+func popCard(stack CardStack, position int) (CardStack, Card) {
+	card := stack[position]
+	if position == len(stack) {
+		return stack[:position], card
+	}
+	return append(stack[:position], stack[position+1:]...), card
+}
+
 type CardPosition struct {
 	stackId  int
 	position int
 }
 
 type AddCardRequest struct {
+	schoolId int
+	position CardPosition
+}
+
+type AddCardToTopRequest struct {
 	schoolId int
 	stackId  int
 }
@@ -88,7 +108,16 @@ type BanishCardRequest struct {
 	position CardPosition
 }
 
+type BanishAllCardsInStackRequest struct {
+	stackId int
+}
+
 type MoveCardRequest struct {
+	sourcePosition CardPosition
+	targetPosition CardPosition
+}
+
+type SwapCardRequest struct {
 	sourcePosition CardPosition
 	targetPosition CardPosition
 }
@@ -128,7 +157,7 @@ func (m *CardStackUniversalManager) newCard(schoolId int) (result Card) {
 		id:       id,
 		schoolId: schoolId,
 	}
-	m.nextStackId++
+	m.nextCardId++
 
 	return
 }
@@ -136,12 +165,46 @@ func (m *CardStackUniversalManager) newCard(schoolId int) (result Card) {
 func (m *CardStackUniversalManager) processRequest(request interface{}) {
 	switch request := request.(type) {
 	case *AddCardRequest:
-		stack := m.cardStacks[request.stackId]
-		newStack := append([]Card(stack), m.newCard(request.schoolId))
-		m.cardStacks[request.stackId] = newStack
+		pos := request.position
+		m.cardStacks[pos.stackId] = pushCard(
+			m.cardStacks[pos.stackId], m.newCard(request.schoolId), pos.position)
+	case *AddCardToTopRequest:
+		m.processRequest(&AddCardRequest{
+			schoolId: request.schoolId,
+			position: CardPosition{
+				stackId:  request.stackId,
+				position: m.getStackSize(request.stackId),
+			},
+		})
 	case *BanishCardRequest:
-		//stack := m.cardStacks[request.position.stackId]
+		pos := request.position
+		m.cardStacks[pos.stackId], _ = popCard(
+			m.cardStacks[pos.stackId], pos.position)
+	case *BanishAllCardsInStackRequest:
+		stackId := request.stackId
+		m.cardStacks[stackId] = []Card{}
 	case *MoveCardRequest:
-	case *ShuffleStackRequest:
+		pos := request.sourcePosition
+		var card Card
+		m.cardStacks[pos.stackId], card = popCard(
+			m.cardStacks[pos.stackId], pos.position)
+
+		pos = request.targetPosition
+		m.cardStacks[pos.stackId] = pushCard(
+			m.cardStacks[pos.stackId], card, pos.position)
+	case *SwapCardRequest:
+		pos1 := request.sourcePosition
+		pos2 := request.targetPosition
+		card1 := m.cardStacks[pos1.stackId][pos1.position]
+		card2 := m.cardStacks[pos2.stackId][pos2.position]
+		m.cardStacks[pos2.stackId][pos2.position] = card1
+		m.cardStacks[pos1.stackId][pos1.position] = card2
 	}
+}
+
+func (m *CardStackUniversalManager) getStackSize(stackId int) int {
+	if stack, ok := m.cardStacks[stackId]; ok {
+		return len(stack)
+	}
+	return -1
 }

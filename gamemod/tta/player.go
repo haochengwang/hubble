@@ -33,28 +33,43 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 		stacks[i] = csm.newStack()
 	}
 	csm.processRequest(&AddCardRequest{
-		stackId:  stacks[MILI_INFANTRY],
+		position: CardPosition{
+			stackId:  stacks[MILI_INFANTRY],
+			position: 0,
+		},
 		schoolId: 25,
 	})
 	csm.processRequest(&AddCardRequest{
-		stackId:  stacks[FARM],
+		position: CardPosition{
+			stackId:  stacks[FARM],
+			position: 0,
+		},
 		schoolId: 1,
 	})
 	csm.processRequest(&AddCardRequest{
-		stackId:  stacks[MINE],
+		position: CardPosition{
+			stackId:  stacks[MINE],
+			position: 0,
+		},
 		schoolId: 5,
 	})
 	csm.processRequest(&AddCardRequest{
-		stackId:  stacks[URBAN_TEMPLE],
+		position: CardPosition{
+			stackId:  stacks[URBAN_TEMPLE],
+			position: 0,
+		},
 		schoolId: 13,
 	})
 	csm.processRequest(&AddCardRequest{
-		stackId:  stacks[URBAN_LAB],
+		position: CardPosition{
+			stackId:  stacks[URBAN_LAB],
+			position: 0,
+		},
 		schoolId: 9,
 	})
 	return &PlayerBoard{
 		stacks: stacks,
-		yellow: 10,
+		yellow: 15,
 		blue:   15,
 	}
 }

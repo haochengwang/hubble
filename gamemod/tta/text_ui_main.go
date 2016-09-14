@@ -133,6 +133,45 @@ func paintYellowBank(player *PlayerBoard) ([][]rune, int) {
 	return bgRunes, 3
 }
 
+func paintCardOnWheel(index, age, id int, name string) ([][]rune, int) {
+	backGround := []string{
+		"       [                            ]",
+	}
+	ageStr := "???"
+	switch age {
+	case 0:
+		ageStr = "A"
+	case 1:
+		ageStr = "I"
+	case 2:
+		ageStr = "II"
+	case 3:
+		ageStr = "III"
+	}
+
+	costStr := "???"
+	switch index {
+	case 1, 2, 3, 4, 5:
+		costStr = "*"
+	case 6, 7, 8, 9, 10:
+		costStr = "**"
+	case 11, 12, 13, 14:
+		costStr = "***"
+	}
+	result := printUpon(toRunes(backGround),
+		toRunes([]string{strconv.Itoa(index)}), 1, 0)
+	result = printUpon(result,
+		toRunes([]string{costStr}), 4, 0)
+	result = printUpon(result,
+		toRunes([]string{ageStr}), 8, 0)
+	result = printUpon(result,
+		toRunes([]string{strconv.Itoa(id)}), 11, 0)
+	result = printUpon(result,
+		toRunes([]string{name}), 15, 0)
+
+	return result, 5
+}
+
 func paintSingleStructure(age, schoolId int, name string, token1, token2 int) ([][]rune, int) {
 	backGround := []string{
 		"+--------+",
@@ -197,10 +236,35 @@ func paintStructures(game *TtaGame, player *PlayerBoard) ([][]rune, int) {
 	return result, 5
 }
 
+func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
+	csm := game.cardStackManager
+	schools := InitBasicCardSchools()
+
+	result := make([][]rune, 0)
+	for i := 0; i < 14; i++ {
+		stack := csm.cardStacks[game.greatWheel[i]]
+		if len(stack) > 0 {
+			cardSchool := schools[stack[0].schoolId]
+			r, _ := paintCardOnWheel(i+1, cardSchool.age, cardSchool.schoolId, cardSchool.schoolName)
+			result = printUpon(result, r, 0, i)
+		} else {
+			r, _ := paintCardOnWheel(i+1, -1, 0, "")
+			result = printUpon(result, r, 0, i)
+		}
+
+	}
+	return result, 1
+}
+
 func PrintAll(str []string) {
 	for _, s := range str {
 		fmt.Println(s)
 	}
+}
+
+func PrintPublicArea(game *TtaGame) {
+	runes, _ := PrintGreatWheels(game)
+	PrintAll(toStrings(runes))
 }
 
 func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
@@ -226,10 +290,17 @@ func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
 
 func PrintGame(game *TtaGame) {
 	PrintUserBoard(game, game.players[0])
+	PrintPublicArea(game)
 }
 
 func main() {
-	PrintGame(NewTta())
-	var a string
-	fmt.Scanln(&a)
+	game := NewTta()
+	for {
+		PrintGame(game)
+		var a string
+		fmt.Scanln(&a)
+
+		game.weedOut(1)
+		game.refillWheels()
+	}
 }

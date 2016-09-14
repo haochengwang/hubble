@@ -991,7 +991,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:          []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Bill Gates",
+		schoolName: "Re",
 		shortName:  "B. Gates",
 		age:        3,
 		cardType:   []CardType{CARDTYPE_LEADER},
@@ -1150,7 +1150,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Reserves - Age III",
+		schoolName:  "Reserves - Age II",
 		age:         2,
 		cardType:    []CardType{CARDTYPE_ACTION},
 		actionBonus: 3,

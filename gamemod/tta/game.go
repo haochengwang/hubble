@@ -8,7 +8,8 @@ import (
 type UserStackId int
 
 type TtaGame struct {
-	cardStackManager *CardStackUniversalManager
+	cardStackManager   *CardStackUniversalManager
+	globalTokenManager *TokenBankUniversalManager
 
 	greatWheel []int // 14 stacks
 	ageStacks  []int // 4 stacks by age

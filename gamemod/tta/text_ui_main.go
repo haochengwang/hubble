@@ -110,7 +110,7 @@ func paintBlueBank(player *PlayerBoard) ([][]rune, int) {
 	}
 
 	for i := 0; i < len(points); i++ {
-		if player.blue > i {
+		if player.userTokenManager.getTokenCount(FREE_BLUE, TOKEN_BLUE) > i {
 			bgRunes[points[i].y][points[i].x] = '*'
 		} else {
 			break
@@ -127,7 +127,7 @@ func paintYellowBank(player *PlayerBoard) ([][]rune, int) {
 		" +--7--+ +--5--+ +--4--+ +--3--+ +2+",
 	}
 	bgRunes := toRunes(backGround)
-	for i := 0; i < player.yellow; i++ {
+	for i := 0; i < player.userTokenManager.getTokenCount(FREE_YELLOW, TOKEN_YELLOW); i++ {
 		bgRunes[1][i*2+1] = '*'
 	}
 	return bgRunes, 3
@@ -198,6 +198,14 @@ func paintSingleStructure(age, schoolId int, name string, token1, token2 int) ([
 		toRunes([]string{strconv.Itoa(schoolId)}), 6, 1)
 	result = printUpon(result,
 		toRunes([]string{name}), 1, 2)
+	if token1 > 0 {
+		result = printUpon(result,
+			toRunes([]string{strconv.Itoa(token1)}), 2, 3)
+	}
+	if token2 > 0 {
+		result = printUpon(result,
+			toRunes([]string{strconv.Itoa(token2)}), 6, 3)
+	}
 
 	return result, 5
 }
@@ -218,11 +226,13 @@ func paintStructures(game *TtaGame, player *PlayerBoard) ([][]rune, int) {
 
 	cardSchool = schools[farmStack[0].schoolId]
 	fmt.Println(farmStack[0].schoolId)
-	r2, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName, 0, 0)
+	r2, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName,
+		player.userTokenManager.getTokenCount(FARM_A, TOKEN_YELLOW), player.userTokenManager.getTokenCount(FARM_A, TOKEN_BLUE))
 	result = printUpon(result, r2, 10, 0)
 
 	cardSchool = schools[mineStack[0].schoolId]
-	r3, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName, 0, 0)
+	r3, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName,
+		player.userTokenManager.getTokenCount(MINE_A, TOKEN_YELLOW), player.userTokenManager.getTokenCount(MINE_A, TOKEN_BLUE))
 	result = printUpon(result, r3, 20, 0)
 
 	cardSchool = schools[templeStack[0].schoolId]

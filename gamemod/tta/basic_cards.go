@@ -137,7 +137,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 	// Urban - temples
 	schools = append(schools, &CardSchool{
 		schoolName: "Religion",
-		shortName:  "Rel.",
+		shortName:  "Religion",
 		age:        0,
 		cardType: []CardType{CARDTYPE_TECH,
 			CARDTYPE_TECH_URBAN,

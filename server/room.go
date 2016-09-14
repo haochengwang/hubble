@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"log"
+
+	"hubble/gamemod"
 )
 
 type RoomStatus int8
@@ -15,8 +17,10 @@ const (
 type Room struct {
 	lobby *Lobby
 
-	id            RoomId
-	status        RoomStatus
+	id      RoomId
+	status  RoomStatus
+	gameMod GameMod
+
 	seatedUsers   []UserId
 	observerUsers map[UserId]bool
 }

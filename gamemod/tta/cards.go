@@ -42,8 +42,8 @@ type CardSchool struct {
 	shortName   string
 	description string
 
-	age      int
-	cardType []CardType
+	age       int
+	cardTypes []CardType
 
 	tech             int
 	techRevolution   int // Only for governments
@@ -67,6 +67,15 @@ type CardSchool struct {
 	cardCounts []int
 }
 
+func (s *CardSchool) hasType(cardType CardType) bool {
+	for _, t := range s.cardTypes {
+		if t == cardType {
+			return true
+		}
+	}
+	return false
+}
+
 type Card struct {
 	id       int
 	schoolId int
@@ -78,7 +87,10 @@ func pushCard(stack CardStack, card Card, position int) CardStack {
 	if position == len(stack) {
 		return append(stack, card)
 	}
-	return append(append(stack[:position], card), stack[position:]...)
+	rear := append([]Card{}, stack[position:]...)
+	result := append(stack[:position], card)
+	result = append(result, rear...)
+	return result
 }
 
 func popCard(stack CardStack, position int) (CardStack, Card) {
@@ -200,6 +212,23 @@ func (m *CardStackUniversalManager) processRequest(request interface{}) {
 		m.cardStacks[pos2.stackId][pos2.position] = card1
 		m.cardStacks[pos1.stackId][pos1.position] = card2
 	}
+}
+
+func (m *CardStackUniversalManager) getFirstCard(stackId int) *Card {
+	if stack, ok := m.cardStacks[stackId]; ok {
+		if len(stack) <= 0 {
+			return nil
+		}
+		return &stack[0]
+	}
+	return nil
+}
+
+func (m *CardStackUniversalManager) getCardAt(stackId int, position int) *Card {
+	if stack, ok := m.cardStacks[stackId]; ok {
+		return &stack[position]
+	}
+	return nil
 }
 
 func (m *CardStackUniversalManager) getStackSize(stackId int) int {

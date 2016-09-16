@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -10,33 +9,41 @@ type UserStackId int
 type TtaGame struct {
 	cardStackManager   *CardStackUniversalManager
 	globalTokenManager *TokenBankUniversalManager
+	cardTokenManager   *TokenBankUniversalManager
 
-	greatWheel []int // 14 stacks
+	// All card schools
+	cardSchools map[int]*CardSchool
+
+	greatWheel []int // 13 stacks
 	ageStacks  []int // 4 stacks by age
 	players    []*PlayerBoard
 }
 
 func NewTta() (result *TtaGame) {
 	game := &TtaGame{
-		cardStackManager: NewCardStackUniversalManager(),
-		greatWheel:       make([]int, 14),
-		ageStacks:        make([]int, 4),
-		players:          make([]*PlayerBoard, 2),
+		cardStackManager:   NewCardStackUniversalManager(),
+		globalTokenManager: NewTokenBankUniversalManager(),
+		cardTokenManager:   NewTokenBankUniversalManager(),
+		greatWheel:         make([]int, 13),
+		ageStacks:          make([]int, 4),
+		players:            make([]*PlayerBoard, 2),
 	}
 	for i := 0; i < 2; i++ {
 		game.players[i] = initPlayerBoard(game)
 	}
 
-	for i := 0; i < 14; i++ {
+	for i := 0; i < 13; i++ {
 		game.greatWheel[i] = game.cardStackManager.newStack()
 	}
 	for i := 0; i < 4; i++ {
 		game.ageStacks[i] = game.cardStackManager.newStack()
 	}
 
+	game.cardSchools = InitBasicCardSchools()
+
 	game.initBasicCards()
 	game.refillWheels()
-	//game.banishAgeACards()
+	game.banishAgeACards()
 	return game
 }
 
@@ -93,7 +100,7 @@ func (g *TtaGame) refillWheels() {
 	csm := g.cardStackManager
 	search := 0
 	currentAge := 0
-	for s := 0; s < 14; s++ {
+	for s := 0; s < 13; s++ {
 		if len(csm.cardStacks[g.greatWheel[s]]) > 0 { // Have card at the position
 			continue
 		}
@@ -104,13 +111,13 @@ func (g *TtaGame) refillWheels() {
 
 		// Search for next position which have a card
 		for {
-			if search >= 14 || len(csm.cardStacks[g.greatWheel[search]]) > 0 {
+			if search >= 13 || len(csm.cardStacks[g.greatWheel[search]]) > 0 {
 				break
 			}
 			search++
 		}
 
-		if search < 14 {
+		if search < 13 {
 			csm.processRequest(&MoveCardRequest{
 				sourcePosition: CardPosition{
 					stackId:  g.greatWheel[search],
@@ -143,8 +150,11 @@ func (g *TtaGame) refillWheels() {
 			}
 		}
 	}
+}
 
-	fmt.Println(csm.cardStacks[g.ageStacks[1]])
+func (g *TtaGame) getCardOnGreatWheel(index int) *Card {
+	csm := g.cardStackManager
+	return csm.getFirstCard(g.greatWheel[index])
 }
 
 func (g *TtaGame) weedOut(position int) {

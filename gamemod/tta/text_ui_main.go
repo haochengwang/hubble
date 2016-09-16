@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strconv"
 )
 
@@ -23,35 +25,21 @@ func toStrings(runes [][]rune) (result []string) {
 	return result
 }
 
-func prepareBoard(width, height int) (result [][]rune) {
-	backGround := []string{
-		"+---------------------------------------------------+",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                       [1]         |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"+---------+  +----------+                           |",
-		"|Despotism|  | Aristotle|                           |",
-		"|         |  |          |                           |",
-		"|  [4]  2 |  |          |                           |",
-		"+---------+  +----------+                           |",
-		"+---------+                                         |",
-		"|  Pyramid|                                         |",
-		"|         |                                         |",
-		"|   * 2 1 |                                         |",
-		"+---------+                                         |",
-		"|                                                   |",
-		"|                                                   |",
-		"|                                                   |",
-		"+---------------------------------------------------+",
+func ageToString(age int) string {
+	switch age {
+	case 0:
+		return "A"
+	case 1:
+		return "I"
+	case 2:
+		return "II"
+	case 3:
+		return "III"
 	}
+	return "???"
+}
+func prepareBoard(width, height int) (result [][]rune) {
+	backGround := []string{"a"}
 
 	return toRunes(backGround)
 }
@@ -77,14 +65,35 @@ func printUpon(source [][]rune, str [][]rune, x, y int) [][]rune {
 	return source
 }
 
+func paintCounters(player *PlayerBoard) ([][]rune, int) {
+	backGround := []string{
+		"================================================",
+		" CULTURE:                                       ",
+		"    TECH:                                       ",
+		"    PWER:                                       ",
+	}
+	result := toRunes(backGround)
+
+	result = printUpon(result,
+		toRunes([]string{strconv.Itoa(player.getCultureTotal()) + "/+" +
+			strconv.Itoa(player.calcCultureInc())}), 14, 1)
+	result = printUpon(result,
+		toRunes([]string{strconv.Itoa(player.getTechTotal()) + "/+" +
+			strconv.Itoa(player.calcTechInc())}), 14, 2)
+	result = printUpon(result,
+		toRunes([]string{strconv.Itoa(player.calcPower())}), 14, 3)
+
+	return result, len(result)
+}
+
 func paintBlueBank(player *PlayerBoard) ([][]rune, int) {
 	backGround := []string{
-		"   o o   o o   o o  ",
-		" 6     4     2         Blue",
-		"   o o   o o   o o o   bank",
+		"   o o   o o   o o           +--------------+",
+		" 6     4     2         Blue  |FREE W.       |",
+		"   o o   o o   o o o   bank  +--------------+",
 	}
 
-	bgRunes := toRunes(backGround)
+	result := toRunes(backGround)
 
 	type Point struct {
 		x, y int
@@ -106,31 +115,194 @@ func paintBlueBank(player *PlayerBoard) ([][]rune, int) {
 		Point{x: 15, y: 0},
 		Point{x: 17, y: 2},
 		Point{x: 17, y: 0},
-		Point{x: 19, y: 0},
+		Point{x: 19, y: 2},
 	}
 
 	for i := 0; i < len(points); i++ {
-		if player.userTokenManager.getTokenCount(FREE_BLUE, TOKEN_BLUE) > i {
-			bgRunes[points[i].y][points[i].x] = '*'
+		if player.specialTokenManager.getTokenCount(FREE_BLUE, TOKEN_BLUE) > i {
+			result[points[i].y][points[i].x] = '*'
 		} else {
 			break
 		}
 	}
 
-	return bgRunes, 3
+	freeWorkers := player.getFreeWorkers()
+	if freeWorkers > 0 {
+		result = printUpon(result,
+			toRunes([]string{strconv.Itoa(freeWorkers)}), 38, 1)
+	}
+
+	return result, 3
 }
 
 func paintYellowBank(player *PlayerBoard) ([][]rune, int) {
 	backGround := []string{
 		" /8\\ /7\\ /6\\ /5\\ /4\\ /3\\ /--2--\\ /1\\ 0",
-		" 5 o o o 4 o o o 3 o o o 2 o o o 1 o    Yellow bank",
-		" +--7--+ +--5--+ +--4--+ +--3--+ +2+",
+		" 6 o o o 4 o o o 3 o o o 2 o o o 1 o    Yellow",
+		" +--7--+ +--5--+ +--4--+ +--3--+ +2+     bank",
 	}
 	bgRunes := toRunes(backGround)
-	for i := 0; i < player.userTokenManager.getTokenCount(FREE_YELLOW, TOKEN_YELLOW); i++ {
+	for i := 0; i < player.getFreeYellowTokens(); i++ {
 		bgRunes[1][i*2+1] = '*'
 	}
 	return bgRunes, 3
+}
+
+func paintGovernmentAndLeader(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	backGround := []string{
+		"================================================",
+		" GOVERNMENT:                                    ",
+		" +--------------------+                         ",
+		" |                    |                         ",
+		" |                    |                         ",
+		" +--------------------+                         ",
+	}
+	governmentCard := csm.getFirstCard(player.stacks[GOVERNMENT])
+	govSchool := player.game.cardSchools[governmentCard.schoolId]
+	result := printUpon(toRunes(backGround),
+		toRunes([]string{ageToString(govSchool.age)}), 3, 3)
+	result = printUpon(result,
+		toRunes([]string{govSchool.schoolName}), 7, 3)
+	result = printUpon(result,
+		toRunes([]string{"[" + strconv.Itoa(govSchool.schoolId) + "]"}), 3, 4)
+	result = printUpon(result,
+		toRunes([]string{strconv.Itoa(player.getUsableWhiteTokens()) + "/" +
+			strconv.Itoa(player.getUsableRedTokens())}), 10, 4)
+
+	leaderCard := csm.getFirstCard(player.stacks[LEADER])
+	if leaderCard != nil {
+		leaderBg := []string{
+			"LEADER:     ",
+			"+---------------+",
+			"|               |",
+			"|               |",
+			"+---------------+",
+		}
+		leaderSchool := player.game.cardSchools[leaderCard.schoolId]
+		result = printUpon(result,
+			toRunes(leaderBg), 30, 1)
+		result = printUpon(result,
+			toRunes([]string{leaderSchool.schoolName}), 32, 3)
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(leaderSchool.schoolId) + "]"}), 32, 4)
+	}
+	return result, len(result)
+}
+
+func paintSpecialTechs(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	need := false
+	backGround := []string{
+		"================================================",
+		" SPEC TECHS:                                    ",
+	}
+	result := toRunes(backGround)
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CIVIL]] {
+		need = true
+		school := player.game.cardSchools[c.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
+				school.schoolName}), 16, 1+i)
+	}
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_WARFARE]] {
+		need = true
+		school := player.game.cardSchools[c.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
+				school.schoolName}), 16, 1+i)
+	}
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_COLONIZE]] {
+		need = true
+		school := player.game.cardSchools[c.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
+				school.schoolName}), 16, 1+i)
+	}
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CONSTRUCTION]] {
+		need = true
+		school := player.game.cardSchools[c.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
+				school.schoolName}), 16, 1+i)
+	}
+	if need {
+		return result, len(result)
+	} else {
+		return make([][]rune, 0), 0
+	}
+}
+
+func paintWonders(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	need := false
+	backGround := []string{
+		"================================================",
+		" WONDERS:                                       ",
+	}
+	result := toRunes(backGround)
+	wonderCard := csm.getFirstCard(player.stacks[WONDER_NOT_COMPLETED])
+	if wonderCard != nil {
+		need = true
+		constructingWonderBg := []string{
+			" +-------------------+                          ",
+			" |                   |                          ",
+			" |                   |                          ",
+			" |                   |                          ",
+			" +-------------------+                          ",
+		}
+		result = printUpon(result,
+			toRunes(constructingWonderBg), 0, 2)
+
+		wonderSchool := player.game.cardSchools[wonderCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{wonderSchool.schoolName}), 8, 3)
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(wonderSchool.schoolId) + "]"}), 3, 3)
+		for i, s := range wonderSchool.wonderBuildCosts {
+			result = printUpon(result,
+				toRunes([]string{strconv.Itoa(s)}), 4+i*2, 4)
+		}
+		for i := 0; i < player.getBlueTokensOnCurrentWonder(); i++ {
+			result = printUpon(result,
+				toRunes([]string{"*"}), 4+i*2, 5)
+		}
+	}
+
+	for i, wonderCard := range csm.cardStacks[player.stacks[WONDER_COMPLETED]] {
+		need = true
+		wonderSchool := player.game.cardSchools[wonderCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(wonderSchool.schoolId) + "] " +
+				wonderSchool.schoolName}), 25, 1+i)
+	}
+	if need {
+		return result, len(result)
+	} else {
+		return make([][]rune, 0), 0
+	}
+}
+
+func paintHands(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	need := false
+	backGround := []string{
+		"================================================",
+		" HANDS:                                       ",
+	}
+	result := toRunes(backGround)
+	for i, handCard := range csm.cardStacks[player.stacks[HAND]] {
+		need = true
+		handSchool := player.game.cardSchools[handCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
+				handSchool.schoolName}), 15, 1+i)
+	}
+	if need {
+		return result, len(result)
+	} else {
+		return make([][]rune, 0), 0
+	}
 }
 
 func paintCardOnWheel(index, age, id int, name string) ([][]rune, int) {
@@ -153,9 +325,9 @@ func paintCardOnWheel(index, age, id int, name string) ([][]rune, int) {
 	switch index {
 	case 1, 2, 3, 4, 5:
 		costStr = "*"
-	case 6, 7, 8, 9, 10:
+	case 6, 7, 8, 9:
 		costStr = "**"
-	case 11, 12, 13, 14:
+	case 10, 11, 12, 13:
 		costStr = "***"
 	}
 	result := printUpon(toRunes(backGround),
@@ -181,19 +353,8 @@ func paintSingleStructure(age, schoolId int, name string, token1, token2 int) ([
 		"+--------+",
 	}
 
-	ageStr := "???"
-	switch age {
-	case 0:
-		ageStr = "A"
-	case 1:
-		ageStr = "I"
-	case 2:
-		ageStr = "II"
-	case 3:
-		ageStr = "III"
-	}
 	result := printUpon(toRunes(backGround),
-		toRunes([]string{ageStr}), 2, 1)
+		toRunes([]string{ageToString(age)}), 2, 1)
 	result = printUpon(result,
 		toRunes([]string{strconv.Itoa(schoolId)}), 6, 1)
 	result = printUpon(result,
@@ -213,37 +374,53 @@ func paintSingleStructure(age, schoolId int, name string, token1, token2 int) ([
 func paintStructures(game *TtaGame, player *PlayerBoard) ([][]rune, int) {
 	csm := game.cardStackManager
 	schools := InitBasicCardSchools()
-	//	maxDepth := 1
+	maxDepth := 0
+	maxWidth := 0
 
-	infantryStack := csm.cardStacks[player.stacks[MILI_INFANTRY]]
-	farmStack := csm.cardStacks[player.stacks[FARM]]
-	mineStack := csm.cardStacks[player.stacks[MINE]]
-	templeStack := csm.cardStacks[player.stacks[URBAN_TEMPLE]]
-	labStack := csm.cardStacks[player.stacks[URBAN_LAB]]
-	cardSchool := schools[infantryStack[0].schoolId]
+	toPaint := []int{
+		MILI_INFANTRY,
+		MILI_CAVALRY,
+		MILI_ARTILERY,
+		MILI_AIRFORCE,
+		FARM,
+		MINE,
+		URBAN_TEMPLE,
+		URBAN_LAB,
+		URBAN_ARENA,
+		URBAN_LIBRARY,
+		URBAN_THEATER,
+	}
 
-	result, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName, 0, 0)
+	for _, p := range toPaint {
+		stack := csm.cardStacks[player.stacks[p]]
+		if len(stack) > 0 {
+			maxWidth++
+			if len(stack) > maxDepth {
+				maxDepth = len(stack)
+			}
+		}
+	}
 
-	cardSchool = schools[farmStack[0].schoolId]
-	fmt.Println(farmStack[0].schoolId)
-	r2, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName,
-		player.userTokenManager.getTokenCount(FARM_A, TOKEN_YELLOW), player.userTokenManager.getTokenCount(FARM_A, TOKEN_BLUE))
-	result = printUpon(result, r2, 10, 0)
+	x := 0
+	result := make([][]rune, 0)
+	for _, school := range toPaint {
+		stack := csm.cardStacks[player.stacks[school]]
+		if len(stack) > 0 {
+			for y, card := range stack {
+				cardSchool := schools[card.schoolId]
+				r, _ := paintSingleStructure(
+					cardSchool.age,
+					cardSchool.schoolId,
+					cardSchool.shortName,
+					game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW),
+					game.cardTokenManager.getTokenCount(card.id, TOKEN_BLUE))
+				result = printUpon(result, r, x*9, (maxDepth-y-1)*4)
+			}
+			x += 1
+		}
+	}
 
-	cardSchool = schools[mineStack[0].schoolId]
-	r3, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName,
-		player.userTokenManager.getTokenCount(MINE_A, TOKEN_YELLOW), player.userTokenManager.getTokenCount(MINE_A, TOKEN_BLUE))
-	result = printUpon(result, r3, 20, 0)
-
-	cardSchool = schools[templeStack[0].schoolId]
-	r4, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName, 0, 0)
-	result = printUpon(result, r4, 30, 0)
-
-	cardSchool = schools[labStack[0].schoolId]
-	r5, _ := paintSingleStructure(cardSchool.age, cardSchool.schoolId, cardSchool.shortName, 0, 0)
-	result = printUpon(result, r5, 40, 0)
-
-	return result, 5
+	return result, maxDepth*4 + 1
 }
 
 func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
@@ -251,7 +428,7 @@ func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
 	schools := InitBasicCardSchools()
 
 	result := make([][]rune, 0)
-	for i := 0; i < 14; i++ {
+	for i := 0; i < 13; i++ {
 		stack := csm.cardStacks[game.greatWheel[i]]
 		if len(stack) > 0 {
 			cardSchool := schools[stack[0].schoolId]
@@ -278,23 +455,33 @@ func PrintPublicArea(game *TtaGame) {
 }
 
 func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
-	//csm := game.cardStackManager
-	//schools := InitBasicCardSchools()
-
-	//infantryStack := csm.cardStacks[player.stacks[MILI_INFANTRY]]
-	//fmt.Println(schools[infantryStack[0].schoolId].schoolName)
-
 	runes := prepareBoard(80, 20)
 	var h int
 	h = 1
+	counters, height := paintCounters(player)
+	runes = printUpon(runes, counters, 1, h)
+	h += height
 	structures, height := paintStructures(game, player)
-	printUpon(runes, structures, 1, h)
+	runes = printUpon(runes, structures, 1, h)
 	h += height
 	blue, height := paintBlueBank(player)
-	printUpon(runes, blue, 1, h)
+	runes = printUpon(runes, blue, 1, h)
 	h += height
 	yellow, height := paintYellowBank(player)
-	printUpon(runes, yellow, 1, 9)
+	runes = printUpon(runes, yellow, 1, h)
+	h += height
+	govLeader, height := paintGovernmentAndLeader(player)
+	runes = printUpon(runes, govLeader, 1, h)
+
+	h += height
+	specTech, height := paintSpecialTechs(player)
+	runes = printUpon(runes, specTech, 1, h)
+	h += height
+	wonders, height := paintWonders(player)
+	runes = printUpon(runes, wonders, 1, h)
+	h += height
+	hands, height := paintHands(player)
+	runes = printUpon(runes, hands, 1, h)
 	PrintAll(toStrings(runes))
 }
 
@@ -305,12 +492,15 @@ func PrintGame(game *TtaGame) {
 
 func main() {
 	game := NewTta()
+	PrintGame(game)
 	for {
-		PrintGame(game)
-		var a string
-		fmt.Scanln(&a)
+		bio := bufio.NewReader(os.Stdin)
+		line, _, err := bio.ReadLine()
 
-		game.weedOut(1)
-		game.refillWheels()
+		if err != nil {
+			continue
+		}
+
+		parseCommand(game, string(line))
 	}
 }

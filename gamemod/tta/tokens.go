@@ -14,6 +14,12 @@ type RemoveTokenRequest struct {
 	tokenCount int
 }
 
+type SetTokenRequest struct {
+	bankId     int
+	tokenType  int
+	tokenCount int
+}
+
 type MoveTokenRequest struct {
 	sourceBankId int
 	targetBankId int
@@ -80,6 +86,8 @@ func (m *TokenBankUniversalManager) processRequest(request interface{}) {
 		m.modifyToken(request.bankId, request.tokenType, request.tokenCount)
 	case *RemoveTokenRequest:
 		m.modifyToken(request.bankId, request.tokenType, -request.tokenCount)
+	case *SetTokenRequest:
+		m.setTokenCount(request.bankId, request.tokenType, request.tokenCount)
 	case *MoveTokenRequest:
 		m.modifyToken(request.sourceBankId, request.tokenType, -request.tokenCount)
 		m.modifyToken(request.targetBankId, request.tokenType, request.tokenCount)

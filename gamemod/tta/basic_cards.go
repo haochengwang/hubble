@@ -700,6 +700,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture: 1,
 		productionTech:    1,
 		cardCounts:        []int{1, 1, 1},
+		specialAbilities:  []int{SA_LIB_OF_ALEXANDRIA},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:              "Colossus",
@@ -729,6 +730,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   1,
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_GREAT_WALL},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:          "St. Peter's Basilica",
@@ -739,6 +741,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   2,
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_ST_PETERS_BASILICA},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:        "Univ. Carolina",
@@ -759,6 +762,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   3,
 		productionBlueToken: 1,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_TAJ_MAHAL},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Transcont. RR",
@@ -768,6 +772,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		wonderBuildCosts: []int{3, 3, 3, 3},
 		productionPower:  4,
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_TRANSCONT_RR},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "Eiffel Tower",
@@ -798,6 +803,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{4, 2, 2, 4},
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_OCEAN_LINER_SERVICE},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Hollywood",
@@ -806,6 +812,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{5, 6, 5},
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_HOLLYWOOD},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Internet",
@@ -814,6 +821,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{2, 3, 4, 3, 2},
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_INTERNET},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "First Space Flight",
@@ -822,6 +830,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{1, 2, 4, 9},
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_FIRST_SPACE_FLIGHT},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Fast Food Chains",
@@ -830,6 +839,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{4, 4, 4, 4},
 		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_FAST_FOOD_CHAINS},
 	})
 
 	// Leaders all have special abilities
@@ -841,6 +851,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionPower:    1,
 		productionRedToken: 1,
 		cardCounts:         []int{1, 1, 1},
+		specialAbilities:   []int{SA_JULIUS_CAESAR},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "Homer",
@@ -849,13 +860,15 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_HOMER},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Moses",
-		shortName:  "Moses",
-		age:        0,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Moses",
+		shortName:        "Moses",
+		age:              0,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_MOSES},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Hammurabi",
@@ -863,27 +876,32 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_LEADER},
 		cardCounts: []int{1, 1, 1},
+
+		specialAbilities: []int{SA_HAMMURABI},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Aristotle",
-		shortName:  "Arist.",
-		age:        0,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Aristotle",
+		shortName:        "Arist.",
+		age:              0,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_ARISTOTLE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Alexander the Great",
-		shortName:  "Alex.",
-		age:        0,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Alexander the Great",
+		shortName:        "Alex.",
+		age:              0,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_ALEXANDER_THE_GREAT},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Michelangelo",
-		shortName:  "Michel.",
-		age:        1,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Michelangelo",
+		shortName:        "Michel.",
+		age:              1,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_MICHELANGELO},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Joan of Arc",
@@ -893,34 +911,39 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionRedToken: 1,
 		productionCulture:  1,
 		cardCounts:         []int{1, 1, 1},
+		specialAbilities:   []int{SA_JOAN_OF_ARC},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Leonardo Da Vinci",
-		shortName:  "Da Vinci",
-		age:        1,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Leonardo Da Vinci",
+		shortName:        "Da Vinci",
+		age:              1,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_LEONARDO_DA_VINCI},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Genghis Khan",
-		shortName:  "Genghis.",
-		age:        1,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Genghis Khan",
+		shortName:        "Genghis.",
+		age:              1,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_GENGHIS_KHAN},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Christopher Columbus",
-		shortName:  "Columbus",
-		age:        1,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Christopher Columbus",
+		shortName:        "Columbus",
+		age:              1,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_CHRISTOPHER_COLUMBUS},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Frederick Barbarosa",
-		shortName:  "Barbaros.",
-		age:        1,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Frederick Barbarosa",
+		shortName:        "Barbaros.",
+		age:              1,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_FREDERICK_BARBAROSSA},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "William Shakespeare",
@@ -929,13 +952,15 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_WILLIAM_SHAKESPEARE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "James Cook",
-		shortName:  "Cook",
-		age:        2,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "James Cook",
+		shortName:        "Cook",
+		age:              2,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_JAMES_COOK},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Napoleon Bonaparte",
@@ -944,6 +969,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:          []CardType{CARDTYPE_LEADER},
 		productionRedToken: 2,
 		cardCounts:         []int{1, 1, 1},
+		specialAbilities:   []int{SA_NAPOLEON_BONAPARTE},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Maximillien Robespierre",
@@ -952,27 +978,31 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:          []CardType{CARDTYPE_LEADER},
 		productionRedToken: 1,
 		cardCounts:         []int{1, 1, 1},
+		specialAbilities:   []int{SA_MAXIMILLIEN_ROBESPIERRE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "J.S. Bach",
-		shortName:  "Bach",
-		age:        2,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "J.S. Bach",
+		shortName:        "Bach",
+		age:              2,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_J_S_BACH},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Isaac Newton",
-		shortName:  "Newton",
-		age:        2,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Isaac Newton",
+		shortName:        "Newton",
+		age:              2,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_ISAAC_NEWTON},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Albert Einstein",
-		shortName:  "Einstein",
-		age:        3,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Albert Einstein",
+		shortName:        "Einstein",
+		age:              3,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_ALBERT_EINSTEIN},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:        "Mahatma Gandhi",
@@ -981,35 +1011,40 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:         []CardType{CARDTYPE_LEADER},
 		productionCulture: 2,
 		cardCounts:        []int{1, 1, 1},
+		specialAbilities:  []int{SA_MAHATMA_GANDHI},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:          "Chalie Chaplin",
+		schoolName:          "Charlie Chaplin",
 		shortName:           "Chaplin",
 		age:                 3,
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 2,
 		cardCounts:          []int{1, 1, 1},
+		specialAbilities:    []int{SA_CHARLIE_CHAPLIN},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Bill Gates",
-		shortName:  "B. Gates",
-		age:        3,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Bill Gates",
+		shortName:        "B. Gates",
+		age:              3,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_BILL_GATES},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Winston Churchill",
-		shortName:  "Church.",
-		age:        3,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Winston Churchill",
+		shortName:        "Church.",
+		age:              3,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_WINSTON_CHURCHILL},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Sid Meier",
-		shortName:  "S. Meier",
-		age:        3,
-		cardTypes:  []CardType{CARDTYPE_LEADER},
-		cardCounts: []int{1, 1, 1},
+		schoolName:       "Sid Meier",
+		shortName:        "S. Meier",
+		age:              3,
+		cardTypes:        []CardType{CARDTYPE_LEADER},
+		cardCounts:       []int{1, 1, 1},
+		specialAbilities: []int{SA_SID_MEIER},
 	})
 
 	// Actions

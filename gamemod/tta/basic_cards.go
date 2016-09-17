@@ -717,7 +717,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:                  0,
 		cardTypes:            []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts:     []int{3, 2, 1},
-		productionWhiteToken: 2,
+		productionWhiteToken: 1,
 		cardCounts:           []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects

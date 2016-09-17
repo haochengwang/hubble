@@ -193,6 +193,25 @@ func (p *PlayerBoard) getFreeBlueTokens() int {
 	return p.specialTokenManager.getTokenCount(FREE_BLUE, TOKEN_BLUE)
 }
 
+func (p *PlayerBoard) getBlueTokensOnMine() int {
+	csm := p.game.cardStackManager
+	result := 0
+	for _, card := range csm.cardStacks[p.stacks[MINE]] {
+		result += p.game.cardTokenManager.getTokenCount(card.id, TOKEN_BLUE)
+	}
+	return result
+}
+
+func (p *PlayerBoard) getConstructionTechLevel() int {
+	csm := p.game.cardStackManager
+	card := csm.getFirstCard(p.stacks[TECH_SPECIAL_CONSTRUCTION])
+	if card == nil {
+		return 0
+	}
+	school := p.game.cardSchools[card.schoolId]
+	return school.age
+}
+
 func (p *PlayerBoard) getHandSize() int {
 	csm := p.game.cardStackManager
 	return csm.getStackSize(p.stacks[HAND])
@@ -1305,9 +1324,94 @@ func (p *PlayerBoard) upgrade(stack int, index1, index2 int) {
 }
 
 func (p *PlayerBoard) canBuildWonder(step int) bool {
-	return false
+	csm := p.game.cardStackManager
+	if p.getUsableWhiteTokens() < 1 {
+		return false
+	}
+	if step <= 0 || step > p.getConstructionTechLevel()+1 {
+		return false
+	}
+	if !p.isBuildingWonder() {
+		return false
+	}
+
+	card := csm.getFirstCard(p.stacks[WONDER_NOT_COMPLETED])
+	school := p.game.cardSchools[card.schoolId]
+	stepsBuilt := p.game.cardTokenManager.getTokenCount(card.id, TOKEN_BLUE)
+	allSteps := school.wonderBuildCosts
+	if step+stepsBuilt > len(allSteps) {
+		return false
+	}
+
+	cost := 0
+	for i := 0; i < step; i++ {
+		cost += allSteps[stepsBuilt+i]
+	}
+
+	if cost > p.getResourceTotal() {
+		fmt.Println("canBuildWonder not enough resource")
+		return false
+	}
+
+	// Corner case: not enough blue tokens
+	if step+stepsBuilt < len(allSteps) &&
+		p.getFreeBlueTokens()+p.getBlueTokensOnMine() < step {
+		fmt.Println("canBuildWonder not enough blue tokens")
+		return false
+	}
+
+	return true
 }
 
 func (p *PlayerBoard) buildWonder(step int) {
+	csm := p.game.cardStackManager
+	card := csm.getFirstCard(p.stacks[WONDER_NOT_COMPLETED])
+	school := p.game.cardSchools[card.schoolId]
+	stepsBuilt := p.game.cardTokenManager.getTokenCount(card.id, TOKEN_BLUE)
+	allSteps := school.wonderBuildCosts
+
+	cost := 0
+	for i := 0; i < step; i++ {
+		cost += allSteps[stepsBuilt+i]
+	}
+
+	p.removeUsableWhiteTokens(1)
+	p.spendResource(cost)
+
+	if step+stepsBuilt < len(allSteps) { // Not completed
+		p.specialTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     FREE_BLUE,
+			tokenType:  TOKEN_BLUE,
+			tokenCount: step,
+		})
+		p.game.cardTokenManager.processRequest(&AddTokenRequest{
+			bankId:     card.id,
+			tokenType:  TOKEN_BLUE,
+			tokenCount: step,
+		})
+	} else { // completed
+		blues := p.getBlueTokensOnCurrentWonder()
+		p.specialTokenManager.processRequest(&AddTokenRequest{
+			bankId:     FREE_BLUE,
+			tokenType:  TOKEN_BLUE,
+			tokenCount: blues,
+		})
+		p.game.cardTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     card.id,
+			tokenType:  TOKEN_BLUE,
+			tokenCount: blues,
+		})
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.stacks[WONDER_NOT_COMPLETED],
+				position: 0,
+			},
+			targetPosition: CardPosition{
+				stackId:  p.stacks[WONDER_COMPLETED],
+				position: csm.getStackSize(p.stacks[WONDER_COMPLETED]),
+			},
+		})
+		p.realignWhiteRedTokens()
+	}
 
 }

@@ -152,5 +152,12 @@ func parseCommand(game *TtaGame, command string) {
 				game.players[0].upgrade(stack1, index1, index2)
 			}
 		}
+	case "buildwonder", "bw":
+		if !game.players[0].canBuildWonder(1) {
+			fmt.Println("Invalid buildwonder command")
+		} else {
+			fmt.Println("upgrade")
+			game.players[0].buildWonder(1)
+		}
 	}
 }

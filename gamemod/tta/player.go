@@ -111,7 +111,7 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 			stackId:  stacks[URBAN_LAB],
 			position: 0,
 		},
-		schoolId: 9,
+		schoolId: 10,
 	})
 	csm.processRequest(&AddCardRequest{
 		position: CardPosition{
@@ -470,7 +470,7 @@ func (p *PlayerBoard) calcPlayerFeatureSum(f func(*CardSchool) int, canBeNegativ
 		URBAN_LIBRARY,
 		URBAN_THEATER,
 	} {
-		for _, card := range csm.cardStacks[t] {
+		for _, card := range csm.cardStacks[p.stacks[t]] {
 			result += f(allSchools[card.schoolId]) *
 				p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
 		}
@@ -959,29 +959,6 @@ func (p *PlayerBoard) canPlayCard(card Card, attachment interface{}) bool {
 				return p.getUsableWhiteTokens() >= p.calcWhiteTokenLimit() &&
 					p.getTechTotal() >= school.techRevolution
 			}
-		} else if school.hasType(CARDTYPE_TECH_URBAN) {
-			urbanCount := -1
-			if school.hasType(CARDTYPE_TECH_URBAN_LAB) {
-				urbanCount = p.getUrbanCount(URBAN_LAB)
-			} else if school.hasType(CARDTYPE_TECH_URBAN_TEMPLE) {
-				urbanCount = p.getUrbanCount(URBAN_TEMPLE)
-			} else if school.hasType(CARDTYPE_TECH_URBAN_ARENA) {
-				urbanCount = p.getUrbanCount(URBAN_ARENA)
-			} else if school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) {
-				urbanCount = p.getUrbanCount(URBAN_LIBRARY)
-			} else if school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
-				urbanCount = p.getUrbanCount(URBAN_THEATER)
-			}
-
-			fmt.Println("urbanCount = ", urbanCount)
-			if urbanCount < 0 {
-				return false
-			}
-
-			fmt.Println("urbanLimit = ", p.calcUrbanLimit())
-			if urbanCount >= p.calcUrbanLimit() {
-				return false
-			}
 		}
 		return p.getUsableWhiteTokens() >= 1 && p.getTechTotal() >= school.tech
 	} else if school.hasType(CARDTYPE_ACTION) {
@@ -1035,6 +1012,33 @@ func (p *PlayerBoard) playStructureTechCard(card Card, index int, stackId int) {
 	})
 }
 
+func (p *PlayerBoard) playSpecialTechCard(card Card, index int, stackId int) {
+	csm := p.game.cardStackManager
+	school := p.game.cardSchools[card.schoolId]
+
+	p.payTech(school.tech)
+	p.removeUsableWhiteTokens(1)
+	if csm.getStackSize(p.stacks[stackId]) > 0 {
+		csm.processRequest(&BanishCardRequest{
+			position: CardPosition{
+				stackId:  p.stacks[stackId],
+				position: 0,
+			},
+		})
+	}
+	csm.processRequest(&MoveCardRequest{
+		sourcePosition: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+		targetPosition: CardPosition{
+			stackId:  p.stacks[stackId],
+			position: 0,
+		},
+	})
+	p.realignWhiteRedTokens()
+}
+
 func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
 	csm := p.game.cardStackManager
 	school := p.game.cardSchools[card.schoolId]
@@ -1062,6 +1066,14 @@ func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
 			p.playStructureTechCard(card, index, URBAN_LIBRARY)
 		} else if school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
 			p.playStructureTechCard(card, index, URBAN_THEATER)
+		} else if school.hasType(CARDTYPE_TECH_SPECIAL_MILITARY) {
+			p.playSpecialTechCard(card, index, TECH_SPECIAL_WARFARE)
+		} else if school.hasType(CARDTYPE_TECH_SPECIAL_CIVIL) {
+			p.playSpecialTechCard(card, index, TECH_SPECIAL_CIVIL)
+		} else if school.hasType(CARDTYPE_TECH_SPECIAL_COLONIZE) {
+			p.playSpecialTechCard(card, index, TECH_SPECIAL_COLONIZE)
+		} else if school.hasType(CARDTYPE_TECH_SPECIAL_CONSTRUCTION) {
+			p.playSpecialTechCard(card, index, TECH_SPECIAL_CONSTRUCTION)
 		} else if school.hasType(CARDTYPE_TECH_GOVERNMENT) {
 			att := attachmentAsInt(attachment, 0)
 			if att == 0 {
@@ -1148,7 +1160,6 @@ func (p *PlayerBoard) canIncreasePop() bool {
 
 func (p *PlayerBoard) increasePop() {
 	p.removeUsableWhiteTokens(1)
-	// TODO Moses
 	cropCost := p.getIncreasePopBaseCost()
 	fmt.Println("increasePop ", cropCost)
 	p.spendCrop(cropCost)
@@ -1204,8 +1215,34 @@ func (p *PlayerBoard) canBuild(stack int, index int) bool {
 		return false
 	}
 
-	// Cost enough
+	// Urban limit
 	card := csm.cardStacks[p.stacks[stack]][index]
+	school := p.game.cardSchools[card.schoolId]
+	if school.hasType(CARDTYPE_TECH_URBAN) {
+		urbanCount := -1
+		if school.hasType(CARDTYPE_TECH_URBAN_LAB) {
+			urbanCount = p.getUrbanCount(URBAN_LAB)
+		} else if school.hasType(CARDTYPE_TECH_URBAN_TEMPLE) {
+			urbanCount = p.getUrbanCount(URBAN_TEMPLE)
+		} else if school.hasType(CARDTYPE_TECH_URBAN_ARENA) {
+			urbanCount = p.getUrbanCount(URBAN_ARENA)
+		} else if school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) {
+			urbanCount = p.getUrbanCount(URBAN_LIBRARY)
+		} else if school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
+			urbanCount = p.getUrbanCount(URBAN_THEATER)
+		}
+
+		fmt.Println("urbanCount = ", urbanCount)
+		if urbanCount < 0 {
+			return false
+		}
+
+		fmt.Println("urbanLimit = ", p.calcUrbanLimit())
+		if urbanCount >= p.calcUrbanLimit() {
+			return false
+		}
+	}
+	// Cost enough
 	cost := p.getModifiedCost(card)
 
 	if p.getResourceTotal() < cost {

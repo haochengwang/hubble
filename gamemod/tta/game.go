@@ -28,6 +28,7 @@ func NewTta() (result *TtaGame) {
 		ageStacks:          make([]int, 4),
 		players:            make([]*PlayerBoard, 2),
 	}
+	game.cardSchools = InitBasicCardSchools()
 	for i := 0; i < 2; i++ {
 		game.players[i] = initPlayerBoard(game)
 	}
@@ -38,8 +39,6 @@ func NewTta() (result *TtaGame) {
 	for i := 0; i < 4; i++ {
 		game.ageStacks[i] = game.cardStackManager.newStack()
 	}
-
-	game.cardSchools = InitBasicCardSchools()
 
 	game.initBasicCards()
 	game.refillWheels()

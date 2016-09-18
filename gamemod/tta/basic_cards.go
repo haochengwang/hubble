@@ -1049,228 +1049,261 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 
 	// Actions
 	schools = append(schools, &CardSchool{
-		schoolName:  "Breakthrough - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Breakthrough - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_BREAKTHROUGH},
 		actionBonus: 2,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Breakthrough - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Breakthrough - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_BREAKTHROUGH},
 		actionBonus: 3,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Cultural Heritage - Age A",
 		age:        0,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_CULTURAL_HERITAGE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Cultural Heritage - Age I",
 		age:        1,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_CULTURAL_HERITAGE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Efficient Upgrade - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Efficient Upgrade - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_EFFICIENT_UPGRADE},
 		actionBonus: 3,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Efficient Upgrade - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Efficient Upgrade - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_EFFICIENT_UPGRADE},
 		actionBonus: 4,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Endowment for Arts",
 		age:        3,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_ENDOWMENT_FOR_ARTS},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Engineering Genius - Age A",
-		age:         0,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Engineering Genius - Age A",
+		age:        0,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_ENGINEERING_GENIUS},
 		actionBonus: 2,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Engineering Genius - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Engineering Genius - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_ENGINEERING_GENIUS},
 		actionBonus: 3,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Engineering Genius - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Engineering Genius - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_ENGINEERING_GENIUS},
 		actionBonus: 4,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Engineering Genius - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Engineering Genius - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_ENGINEERING_GENIUS},
 		actionBonus: 5,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Frugality - Age A",
-		age:         0,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Frugality - Age A",
+		age:        0,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_FRUGALITY},
 		actionBonus: 1,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Frugality - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Frugality - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_FRUGALITY},
 		actionBonus: 2,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Frugality - Age II",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Frugality - Age II",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_FRUGALITY},
 		actionBonus: 3,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Military Build-Up",
 		age:        3,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_MILITARY_BUILD_UP},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Patriotism - Age A",
-		age:         0,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Patriotism - Age A",
+		age:        0,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_PATRIOTISM},
 		actionBonus: 1,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Patriotism - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Patriotism - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_PATRIOTISM},
 		actionBonus: 2,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Patriotism - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Patriotism - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_PATRIOTISM},
 		actionBonus: 3,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Patriotism - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Patriotism - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_PATRIOTISM},
 		actionBonus: 4,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Reserves - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Reserves - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RESERVES},
 		actionBonus: 2,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Reserves - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Reserves - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RESERVES},
 		actionBonus: 3,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Reserves - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Reserves - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RESERVES},
 		actionBonus: 4,
 		cardCounts:  []int{3, 3, 3},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Revolutionary Idea - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Revolutionary Idea - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_REVOLUTIONARY_IDEA},
 		actionBonus: 4,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Revolutionary Idea - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Revolutionary Idea - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_REVOLUTIONARY_IDEA},
 		actionBonus: 6,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Rich Land - Age A",
-		age:         0,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Rich Land - Age A",
+		age:        0,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RICH_LAND},
 		actionBonus: 1,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Rich Land - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Rich Land - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RICH_LAND},
 		actionBonus: 2,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Rich Land - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Rich Land - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_RICH_LAND},
 		actionBonus: 3,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Stockpile",
 		age:        0,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_STOCKPILE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Urban Growth - Age A",
-		age:         0,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Urban Growth - Age A",
+		age:        0,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_URBAN_GROWTH},
 		actionBonus: 1,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Urban Growth - Age I",
-		age:         1,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Urban Growth - Age I",
+		age:        1,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_URBAN_GROWTH},
 		actionBonus: 2,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Urban Growth - Age II",
-		age:         2,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Urban Growth - Age II",
+		age:        2,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_URBAN_GROWTH},
 		actionBonus: 3,
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:  "Urban Growth - Age III",
-		age:         3,
-		cardTypes:   []CardType{CARDTYPE_ACTION},
+		schoolName: "Urban Growth - Age III",
+		age:        3,
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_URBAN_GROWTH},
 		actionBonus: 4,
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Wave of Nationalism",
 		age:        2,
-		cardTypes:  []CardType{CARDTYPE_ACTION},
+		cardTypes: []CardType{CARDTYPE_ACTION,
+			CARDTYPE_ACTION_WAVE_OF_NATIONALISM},
 		cardCounts: []int{1, 1, 1},
 	})
 

@@ -34,8 +34,11 @@ const (
 	FREE_WORKER
 	WHITE_USED
 	WHITE_UNUSED
+	WHITE_TEMP
 	RED_USED
 	RED_UNUSED
+	RED_TEMP
+	MILITARY_RESOURCE_TEMP
 
 	CULTURE_COUNTER
 	TECH_COUNTER
@@ -111,7 +114,7 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 			stackId:  stacks[URBAN_LAB],
 			position: 0,
 		},
-		schoolId: 10,
+		schoolId: 9,
 	})
 	csm.processRequest(&AddCardRequest{
 		position: CardPosition{
@@ -166,7 +169,12 @@ func (p *PlayerBoard) getTechTotal() int {
 }
 
 func (p *PlayerBoard) getUsableWhiteTokens() int {
-	return p.specialTokenManager.getTokenCount(WHITE_UNUSED, TOKEN_WHITE)
+	return p.specialTokenManager.getTokenCount(WHITE_UNUSED, TOKEN_WHITE) +
+		p.specialTokenManager.getTokenCount(WHITE_TEMP, TOKEN_WHITE)
+}
+
+func (p *PlayerBoard) getTempWhiteTokens() int {
+	return p.specialTokenManager.getTokenCount(WHITE_TEMP, TOKEN_WHITE)
 }
 
 func (p *PlayerBoard) getUsedWhiteTokens() int {
@@ -174,7 +182,12 @@ func (p *PlayerBoard) getUsedWhiteTokens() int {
 }
 
 func (p *PlayerBoard) getUsableRedTokens() int {
-	return p.specialTokenManager.getTokenCount(RED_UNUSED, TOKEN_RED)
+	return p.specialTokenManager.getTokenCount(RED_UNUSED, TOKEN_RED) +
+		p.specialTokenManager.getTokenCount(RED_TEMP, TOKEN_RED)
+}
+
+func (p *PlayerBoard) getTempRedTokens() int {
+	return p.specialTokenManager.getTokenCount(RED_TEMP, TOKEN_RED)
 }
 
 func (p *PlayerBoard) getUsedRedTokens() int {
@@ -212,7 +225,7 @@ func (p *PlayerBoard) getConstructionTechLevel() int {
 	return school.age
 }
 
-func (p *PlayerBoard) getHandSize() int {
+func (p *PlayerBoard) getCivilHandSize() int {
 	csm := p.game.cardStackManager
 	return csm.getStackSize(p.stacks[HAND])
 }
@@ -224,6 +237,10 @@ func (p *PlayerBoard) getUrbanCount(stack int) int {
 		result += p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
 	}
 	return result
+}
+
+func (p *PlayerBoard) getTempMilitaryResource() int {
+	return p.specialTokenManager.getTokenCount(MILITARY_RESOURCE_TEMP, TOKEN_BLUE)
 }
 
 func (p *PlayerBoard) getResourceCorruption() int {
@@ -276,13 +293,43 @@ func (p *PlayerBoard) getIncreasePopBaseCost() int {
 	}
 }
 
-func (p *PlayerBoard) removeUsableWhiteTokens(count int) {
-	p.specialTokenManager.processRequest(&MoveTokenRequest{
-		sourceBankId: WHITE_UNUSED,
-		targetBankId: WHITE_USED,
-		tokenType:    TOKEN_WHITE,
-		tokenCount:   count,
+func (p *PlayerBoard) gainTempWhiteTokens(amount int) {
+	p.specialTokenManager.processRequest(&AddTokenRequest{
+		bankId:     WHITE_TEMP,
+		tokenType:  TOKEN_WHITE,
+		tokenCount: amount,
 	})
+
+}
+
+func (p *PlayerBoard) gainTempRedTokens(amount int) {
+	p.specialTokenManager.processRequest(&AddTokenRequest{
+		bankId:     RED_TEMP,
+		tokenType:  TOKEN_RED,
+		tokenCount: amount,
+	})
+}
+func (p *PlayerBoard) removeUsableWhiteTokens(count int) {
+	if count < p.getTempWhiteTokens() {
+		p.specialTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     WHITE_TEMP,
+			tokenType:  TOKEN_WHITE,
+			tokenCount: count,
+		})
+	} else {
+		temp := p.getTempWhiteTokens()
+		p.specialTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     WHITE_TEMP,
+			tokenType:  TOKEN_WHITE,
+			tokenCount: temp,
+		})
+		p.specialTokenManager.processRequest(&MoveTokenRequest{
+			sourceBankId: WHITE_UNUSED,
+			targetBankId: WHITE_USED,
+			tokenType:    TOKEN_WHITE,
+			tokenCount:   count - temp,
+		})
+	}
 }
 
 func (p *PlayerBoard) removeAllUsableWhiteTokens() {
@@ -290,12 +337,26 @@ func (p *PlayerBoard) removeAllUsableWhiteTokens() {
 }
 
 func (p *PlayerBoard) removeUsableRedTokens(count int) {
-	p.specialTokenManager.processRequest(&MoveTokenRequest{
-		sourceBankId: RED_UNUSED,
-		targetBankId: RED_USED,
-		tokenType:    TOKEN_RED,
-		tokenCount:   count,
-	})
+	if count < p.getTempRedTokens() {
+		p.specialTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     RED_TEMP,
+			tokenType:  TOKEN_RED,
+			tokenCount: count,
+		})
+	} else {
+		temp := p.getTempRedTokens()
+		p.specialTokenManager.processRequest(&RemoveTokenRequest{
+			bankId:     RED_TEMP,
+			tokenType:  TOKEN_RED,
+			tokenCount: temp,
+		})
+		p.specialTokenManager.processRequest(&MoveTokenRequest{
+			sourceBankId: RED_UNUSED,
+			targetBankId: RED_USED,
+			tokenType:    TOKEN_RED,
+			tokenCount:   count - temp,
+		})
+	}
 }
 
 func (p *PlayerBoard) removeAllUsableRedTokens() {
@@ -662,13 +723,17 @@ func (p *PlayerBoard) takeCardFromWheel(index int) {
 	}
 }
 
-func (p *PlayerBoard) getResourceTotal() (result int) {
+func (p *PlayerBoard) getResourceTotal(military bool) (result int) {
 	csm := p.game.cardStackManager
 	result = 0
 	for _, card := range csm.cardStacks[p.stacks[MINE]] {
 		school := p.game.cardSchools[card.schoolId]
 		amount := p.game.cardTokenManager.getTokenCount(card.id, TOKEN_BLUE)
 		result += school.productionResource * amount
+	}
+
+	if military {
+		return result + p.getTempMilitaryResource()
 	}
 	return
 }
@@ -731,7 +796,41 @@ func (p *PlayerBoard) tryArrangeSpend(q, unit []int, free, spent int) (possible 
 	return false, nil
 }
 
-func (p *PlayerBoard) spendResource(amount int) {
+func (p *PlayerBoard) gainTempMilitaryResource(amount int) {
+	p.specialTokenManager.processRequest(&AddTokenRequest{
+		bankId:     MILITARY_RESOURCE_TEMP,
+		tokenType:  TOKEN_BLUE,
+		tokenCount: amount,
+	})
+}
+
+func (p *PlayerBoard) clearTempMilitaryResource() {
+	p.specialTokenManager.processRequest(&SetTokenRequest{
+		bankId:     MILITARY_RESOURCE_TEMP,
+		tokenType:  TOKEN_BLUE,
+		tokenCount: 0,
+	})
+}
+
+func (p *PlayerBoard) spendTempMilitaryResource(amount int) {
+	p.specialTokenManager.processRequest(&RemoveTokenRequest{
+		bankId:     MILITARY_RESOURCE_TEMP,
+		tokenType:  TOKEN_BLUE,
+		tokenCount: amount,
+	})
+}
+
+func (p *PlayerBoard) spendResource(amount int, military bool) {
+	if military {
+		temp := p.getTempMilitaryResource()
+		if temp >= amount {
+			p.spendTempMilitaryResource(amount)
+			return
+		} else {
+			amount -= temp
+			p.spendTempMilitaryResource(temp)
+		}
+	}
 	csm := p.game.cardStackManager
 	quantity := make([]int, csm.getStackSize(p.stacks[MINE]))
 	unit := make([]int, csm.getStackSize(p.stacks[MINE]))
@@ -750,11 +849,6 @@ func (p *PlayerBoard) spendResource(amount int) {
 	possible, newQuantity := p.tryArrangeSpend(quantity, unit, p.getFreeBlueTokens(), amount)
 	if !possible {
 		return
-	}
-	if amount == 0 {
-		fmt.Println(p.getResourceTotal())
-		fmt.Println(quantity)
-		fmt.Println(newQuantity)
 	}
 	newSum := 0
 	for _, q := range newQuantity {
@@ -777,7 +871,7 @@ func (p *PlayerBoard) spendResource(amount int) {
 }
 
 func (p *PlayerBoard) spendAllResource() {
-	p.spendResource(p.getResourceTotal())
+	p.spendResource(p.getResourceTotal(true), true)
 }
 
 func (p *PlayerBoard) spendCrop(amount int) {
@@ -843,9 +937,9 @@ func (p *PlayerBoard) corrupt() {
 	c := p.getResourceCorruption()
 	//fmt.Println(p.getFreeBlueTokens(), c)
 
-	res := p.getResourceTotal()
+	res := p.getResourceTotal(false)
 	if c <= res {
-		p.spendResource(c)
+		p.spendResource(c, false)
 	} else {
 		c -= res
 		p.spendAllResource()
@@ -859,7 +953,39 @@ func (p *PlayerBoard) corrupt() {
 	}
 }
 
-func (p *PlayerBoard) productCrop() {
+func (p *PlayerBoard) gainCrop(amount int) {
+	csm := p.game.cardStackManager
+	// Need reverse iterate
+	for i := csm.getStackSize(p.stacks[FARM]) - 1; i >= 0; i-- {
+		card := csm.cardStacks[p.stacks[FARM]][i]
+		school := p.game.cardSchools[card.schoolId]
+		unit := school.productionCrop
+		for {
+			if amount == 0 {
+				return
+			}
+			if amount < unit {
+				break
+			}
+			if p.getFreeBlueTokens() <= 0 {
+				return
+			}
+			p.specialTokenManager.processRequest(&RemoveTokenRequest{
+				bankId:     FREE_BLUE,
+				tokenType:  TOKEN_BLUE,
+				tokenCount: 1,
+			})
+			p.game.cardTokenManager.processRequest(&AddTokenRequest{
+				bankId:     card.id,
+				tokenType:  TOKEN_BLUE,
+				tokenCount: 1,
+			})
+			amount -= unit
+		}
+	}
+}
+
+func (p *PlayerBoard) produceCrop() {
 	csm := p.game.cardStackManager
 	// Need reverse iterate
 	for i := csm.getStackSize(p.stacks[FARM]) - 1; i >= 0; i-- {
@@ -884,6 +1010,38 @@ func (p *PlayerBoard) productCrop() {
 			tokenCount: amount,
 		})
 		fmt.Println(p.getFreeYellowTokens())
+	}
+}
+
+func (p *PlayerBoard) gainResource(amount int) {
+	csm := p.game.cardStackManager
+	// Need reverse iterate
+	for i := csm.getStackSize(p.stacks[MINE]) - 1; i >= 0; i-- {
+		card := csm.cardStacks[p.stacks[MINE]][i]
+		school := p.game.cardSchools[card.schoolId]
+		unit := school.productionCrop
+		for {
+			if amount == 0 {
+				return
+			}
+			if amount < unit {
+				break
+			}
+			if p.getFreeBlueTokens() <= 0 {
+				return
+			}
+			p.specialTokenManager.processRequest(&RemoveTokenRequest{
+				bankId:     FREE_BLUE,
+				tokenType:  TOKEN_BLUE,
+				tokenCount: 1,
+			})
+			p.game.cardTokenManager.processRequest(&AddTokenRequest{
+				bankId:     card.id,
+				tokenType:  TOKEN_BLUE,
+				tokenCount: 1,
+			})
+			amount -= unit
+		}
 	}
 }
 
@@ -929,7 +1087,7 @@ func (p *PlayerBoard) productCultureAndTech() {
 func (p *PlayerBoard) doProductionPhase() {
 	p.productCultureAndTech()
 	p.corrupt()
-	p.productCrop()
+	p.produceCrop()
 	p.consumeCrop()
 	p.productResource()
 	p.refillWhiteRedTokens()
@@ -942,10 +1100,110 @@ func attachmentAsInt(attachment interface{}, def int) int {
 	switch attachment := attachment.(type) {
 	case int:
 		return attachment
+	case []int:
+		return attachment[0]
 	default:
 		return def
 	}
 }
+
+func attachmentAsIntList(attachment interface{}, def []int) []int {
+	if attachment == nil {
+		return def
+	}
+	switch attachment := attachment.(type) {
+	case []int:
+		return attachment
+	default:
+		return def
+	}
+}
+
+func (p *PlayerBoard) canPlayBreakthrough(card Card, index int) bool {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= p.getCivilHandSize() {
+		return false
+	}
+	nestedCard := csm.cardStacks[p.stacks[HAND]][index]
+	school := p.game.cardSchools[nestedCard.schoolId]
+	if !school.hasType(CARDTYPE_TECH) {
+		return false
+	}
+
+	return p.canPlayCard(nestedCard, nil)
+}
+
+func (p *PlayerBoard) canPlayEfficientUpgrade(card Card, stacksAndIndexes []int) bool {
+	school := p.game.cardSchools[card.schoolId]
+	if len(stacksAndIndexes) != 3 {
+		return false
+	}
+	return p.canUpgrade(stacksAndIndexes[0],
+		stacksAndIndexes[1], stacksAndIndexes[2], school.actionBonus)
+}
+
+func (p *PlayerBoard) canPlayEngineeringGenius(card Card) bool {
+	school := p.game.cardSchools[card.schoolId]
+	return p.canBuildWonder(1, school.actionBonus)
+}
+
+func (p *PlayerBoard) canPlayFrugality(card Card) bool {
+	return p.canIncreasePop()
+}
+
+func (p *PlayerBoard) canPlayRichLand(card Card, stacksAndIndexes []int) bool {
+	school := p.game.cardSchools[card.schoolId]
+	if len(stacksAndIndexes) != 2 { // Used to build
+		return false
+	} else if len(stacksAndIndexes) != 3 { // Used to upgrade
+
+		stack := stacksAndIndexes[0]
+		index := stacksAndIndexes[1]
+
+		if stack == FARM ||
+			stack == MINE {
+			return p.canBuild(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+
+}
+
+func (p *PlayerBoard) canPlayUrbanGrowth(card Card, stacksAndIndexes []int) bool {
+	school := p.game.cardSchools[card.schoolId]
+	if len(stacksAndIndexes) == 2 { // Used to build
+		stack := stacksAndIndexes[0]
+		index := stacksAndIndexes[1]
+		if stack == URBAN_LAB ||
+			stack == URBAN_TEMPLE ||
+			stack == URBAN_ARENA ||
+			stack == URBAN_LIBRARY ||
+			stack == URBAN_THEATER {
+			return p.canBuild(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+		} else {
+			return false
+		}
+	} else if len(stacksAndIndexes) == 3 { // Used to upgrade
+		stack := stacksAndIndexes[0]
+		index1 := stacksAndIndexes[1]
+		index2 := stacksAndIndexes[2]
+		if stack == URBAN_LAB ||
+			stack == URBAN_TEMPLE ||
+			stack == URBAN_ARENA ||
+			stack == URBAN_LIBRARY ||
+			stack == URBAN_THEATER {
+			return p.canUpgrade(stack, index1, index2, school.actionBonus)
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func (p *PlayerBoard) canPlayCard(card Card, attachment interface{}) bool {
 	school := p.game.cardSchools[card.schoolId]
 	if school.hasType(CARDTYPE_TECH) {
@@ -962,7 +1220,37 @@ func (p *PlayerBoard) canPlayCard(card Card, attachment interface{}) bool {
 		}
 		return p.getUsableWhiteTokens() >= 1 && p.getTechTotal() >= school.tech
 	} else if school.hasType(CARDTYPE_ACTION) {
-		// TODO
+		if p.getUsableWhiteTokens() >= 1 {
+			if school.hasType(CARDTYPE_ACTION_BREAKTHROUGH) {
+				return p.canPlayBreakthrough(card, attachmentAsInt(attachment, -1))
+			} else if school.hasType(CARDTYPE_ACTION_CULTURAL_HERITAGE) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
+				return p.canPlayEfficientUpgrade(card, attachmentAsIntList(attachment, []int{}))
+			} else if school.hasType(CARDTYPE_ACTION_ENDOWMENT_FOR_ARTS) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_ENGINEERING_GENIUS) {
+				return p.canPlayEngineeringGenius(card)
+			} else if school.hasType(CARDTYPE_ACTION_FRUGALITY) {
+				return p.canPlayFrugality(card)
+			} else if school.hasType(CARDTYPE_ACTION_MILITARY_BUILD_UP) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_PATRIOTISM) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_RESERVES) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_REVOLUTIONARY_IDEA) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_RICH_LAND) {
+				return p.canPlayRichLand(card, attachmentAsIntList(attachment, []int{}))
+			} else if school.hasType(CARDTYPE_ACTION_STOCKPILE) {
+				return true
+			} else if school.hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
+				return p.canPlayUrbanGrowth(card, attachmentAsIntList(attachment, []int{}))
+			} else if school.hasType(CARDTYPE_ACTION_WAVE_OF_NATIONALISM) {
+				return true
+			}
+		}
 		return false
 	} else if school.hasType(CARDTYPE_LEADER) {
 		return p.getUsableWhiteTokens() >= 1
@@ -972,7 +1260,7 @@ func (p *PlayerBoard) canPlayCard(card Card, attachment interface{}) bool {
 
 func (p *PlayerBoard) canPlayHand(index int, attachment interface{}) bool {
 	csm := p.game.cardStackManager
-	if index < 0 || index >= p.getHandSize() {
+	if index < 0 || index >= p.getCivilHandSize() {
 		return false
 	}
 
@@ -1037,6 +1325,205 @@ func (p *PlayerBoard) playSpecialTechCard(card Card, index int, stackId int) {
 		},
 	})
 	p.realignWhiteRedTokens()
+}
+
+func (p *PlayerBoard) playBreakthroughCard(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	school := p.game.cardSchools[card.schoolId]
+
+	nestedIndex := attachmentAsInt(attachment, -1)
+	nestedCard := csm.cardStacks[p.stacks[HAND]][nestedIndex]
+
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	if index > nestedIndex {
+		p.playCard(nestedCard, nestedIndex, nil)
+	} else {
+		p.playCard(nestedCard, nestedIndex+1, nil)
+	}
+	p.gainTech(school.actionBonus)
+}
+
+func (p *PlayerBoard) playCulturalHeritageCard(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	school := p.game.cardSchools[card.schoolId]
+
+	p.removeUsableWhiteTokens(1)
+	if school.age == 0 {
+		p.gainTech(1)
+		p.gainCulture(4)
+	} else if school.age == 1 {
+		p.gainTech(2)
+		p.gainCulture(2)
+	}
+}
+
+func (p *PlayerBoard) playEfficientUpgradeCard(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
+	school := p.game.cardSchools[card.schoolId]
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	p.upgrade(stacksAndIndexes[0],
+		stacksAndIndexes[1], stacksAndIndexes[2], school.actionBonus)
+}
+
+func (p *PlayerBoard) playEndowmentForArtsCard(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	p.removeUsableWhiteTokens(1)
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	// TODO Endowment for arts
+}
+
+func (p *PlayerBoard) playEngineeringGenius(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	school := p.game.cardSchools[card.schoolId]
+	p.buildWonder(1, school.actionBonus)
+}
+
+func (p *PlayerBoard) playFrugality(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	p.increasePop()
+
+	school := p.game.cardSchools[card.schoolId]
+	p.gainCrop(school.actionBonus)
+}
+
+func (p *PlayerBoard) playMilitaryBuildUp(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+}
+
+func (p *PlayerBoard) playPatroitism(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	school := p.game.cardSchools[card.schoolId]
+	p.gainTempMilitaryResource(school.actionBonus)
+	p.gainTempRedTokens(1)
+}
+
+func (p *PlayerBoard) playReserves(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	school := p.game.cardSchools[card.schoolId]
+	option := attachmentAsInt(attachment, 0)
+	if option == 0 {
+		p.gainResource(school.actionBonus)
+	} else {
+		p.gainCrop(school.actionBonus)
+	}
+}
+
+func (p *PlayerBoard) playRevolutionaryIdea(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	school := p.game.cardSchools[card.schoolId]
+	p.gainTech(school.actionBonus)
+}
+
+func (p *PlayerBoard) playRichLand(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
+	school := p.game.cardSchools[card.schoolId]
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	p.build(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+}
+
+func (p *PlayerBoard) playStockpile(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+
+	p.gainResource(1)
+	p.gainCrop(1)
+}
+
+func (p *PlayerBoard) playUrbanGrowth(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
+	school := p.game.cardSchools[card.schoolId]
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
+	p.build(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+}
+
+func (p *PlayerBoard) playWaveOfNationalism(card Card, index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	csm.processRequest(&BanishCardRequest{
+		position: CardPosition{
+			stackId:  p.stacks[HAND],
+			position: index,
+		},
+	})
 }
 
 func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
@@ -1107,7 +1594,35 @@ func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
 			fmt.Println("after realign: ", p.getUsableWhiteTokens())
 		}
 	} else if school.hasType(CARDTYPE_ACTION) {
-		// TODO
+		if school.hasType(CARDTYPE_ACTION_BREAKTHROUGH) {
+			p.playBreakthroughCard(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_CULTURAL_HERITAGE) {
+			p.playCulturalHeritageCard(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
+			p.playEfficientUpgradeCard(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_ENDOWMENT_FOR_ARTS) {
+			p.playEndowmentForArtsCard(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_ENGINEERING_GENIUS) {
+			p.playEngineeringGenius(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_FRUGALITY) {
+			p.playFrugality(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_MILITARY_BUILD_UP) {
+			p.playMilitaryBuildUp(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_PATRIOTISM) {
+			p.playPatroitism(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_RESERVES) {
+			p.playReserves(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_REVOLUTIONARY_IDEA) {
+			p.playRevolutionaryIdea(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_RICH_LAND) {
+			p.playRichLand(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_STOCKPILE) {
+			p.playStockpile(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
+			p.playUrbanGrowth(card, index, attachment)
+		} else if school.hasType(CARDTYPE_ACTION_WAVE_OF_NATIONALISM) {
+			p.playWaveOfNationalism(card, index, attachment)
+		}
 	} else if school.hasType(CARDTYPE_LEADER) {
 		if p.hasLeader() {
 			// TODO: Homer
@@ -1173,8 +1688,22 @@ func (p *PlayerBoard) increasePop() {
 
 func (p *PlayerBoard) getModifiedCost(card Card) int {
 	school := p.game.cardSchools[card.schoolId]
+	cost := school.buildCost
+	if school.hasType(CARDTYPE_TECH_URBAN) {
+		constructionLevel := p.getConstructionTechLevel()
+		age := school.age
+		if constructionLevel > age {
+			cost -= age
+		} else {
+			cost -= constructionLevel
+		}
+	}
+
+	if cost < 0 {
+		cost = 0
+	}
 	// TODO: all cost reduction
-	return school.buildCost
+	return cost
 }
 
 func (p *PlayerBoard) canBuild(stack int, index int) bool {
@@ -1185,11 +1714,14 @@ func (p *PlayerBoard) canBuild(stack int, index int) bool {
 		fmt.Println("canBuild no free worker")
 		return false
 	}
+
+	military := false
 	// Valid stacks
 	if stack == MILI_INFANTRY ||
 		stack == MILI_CAVALRY ||
 		stack == MILI_ARTILERY ||
 		stack == MILI_AIRFORCE {
+		military = true
 		if p.getUsableRedTokens() <= 0 {
 			fmt.Println("canBuild no red tokens")
 			return false
@@ -1245,27 +1777,32 @@ func (p *PlayerBoard) canBuild(stack int, index int) bool {
 	// Cost enough
 	cost := p.getModifiedCost(card)
 
-	if p.getResourceTotal() < cost {
+	if p.getResourceTotal(military) < cost {
 		fmt.Println("canBuild not enough tech")
 		return false
 	}
 	return true
 }
 
-func (p *PlayerBoard) build(stack int, index int) {
+func (p *PlayerBoard) build(stack int, index int, reducedCost int) {
 	csm := p.game.cardStackManager
 	card := csm.cardStacks[p.stacks[stack]][index]
-	cost := p.getModifiedCost(card)
+	cost := p.getModifiedCost(card) - reducedCost
+	if cost < 0 {
+		cost = 0
+	}
 
+	military := false
 	if stack == MILI_INFANTRY ||
 		stack == MILI_CAVALRY ||
 		stack == MILI_ARTILERY ||
 		stack == MILI_AIRFORCE {
+		military = true
 		p.removeUsableRedTokens(1)
 	} else {
 		p.removeUsableWhiteTokens(1)
 	}
-	p.spendResource(cost)
+	p.spendResource(cost, military)
 	p.specialTokenManager.processRequest(&RemoveTokenRequest{
 		bankId:     FREE_WORKER,
 		tokenType:  TOKEN_YELLOW,
@@ -1278,7 +1815,7 @@ func (p *PlayerBoard) build(stack int, index int) {
 	})
 }
 
-func (p *PlayerBoard) canUpgrade(stack int, index1, index2 int) bool {
+func (p *PlayerBoard) canUpgrade(stack, index1, index2, reducedCost int) bool {
 	csm := p.game.cardStackManager
 
 	// Valid indexes
@@ -1322,23 +1859,23 @@ func (p *PlayerBoard) canUpgrade(stack int, index1, index2 int) bool {
 	card2 := csm.cardStacks[p.stacks[stack]][index2]
 	cost1 := p.getModifiedCost(card1)
 	cost2 := p.getModifiedCost(card2)
-	cost := cost2 - cost1
+	cost := cost2 - cost1 - reducedCost
 	if cost < 0 {
 		cost = 0
 	}
 
-	if p.getResourceTotal() < cost {
+	if p.getResourceTotal(false) < cost {
 		fmt.Println("canBuild not enough tech")
 		return false
 	}
 	return true
 }
 
-func (p *PlayerBoard) upgrade(stack int, index1, index2 int) {
+func (p *PlayerBoard) upgrade(stack, index1, index2, reducedCost int) {
 	csm := p.game.cardStackManager
 	card1 := csm.cardStacks[p.stacks[stack]][index1]
 	card2 := csm.cardStacks[p.stacks[stack]][index2]
-	cost := p.getModifiedCost(card2) - p.getModifiedCost(card1)
+	cost := p.getModifiedCost(card2) - p.getModifiedCost(card1) - reducedCost
 	if cost < 0 {
 		cost = 0
 	}
@@ -1351,7 +1888,7 @@ func (p *PlayerBoard) upgrade(stack int, index1, index2 int) {
 	} else {
 		p.removeUsableWhiteTokens(1)
 	}
-	p.spendResource(cost)
+	p.spendResource(cost, false)
 	p.game.cardTokenManager.processRequest(&MoveTokenRequest{
 		sourceBankId: card1.id,
 		targetBankId: card2.id,
@@ -1360,7 +1897,7 @@ func (p *PlayerBoard) upgrade(stack int, index1, index2 int) {
 	})
 }
 
-func (p *PlayerBoard) canBuildWonder(step int) bool {
+func (p *PlayerBoard) canBuildWonder(step, reducedCost int) bool {
 	csm := p.game.cardStackManager
 	if p.getUsableWhiteTokens() < 1 {
 		return false
@@ -1384,8 +1921,11 @@ func (p *PlayerBoard) canBuildWonder(step int) bool {
 	for i := 0; i < step; i++ {
 		cost += allSteps[stepsBuilt+i]
 	}
-
-	if cost > p.getResourceTotal() {
+	cost -= reducedCost
+	if cost < 0 {
+		cost = 0
+	}
+	if cost > p.getResourceTotal(false) {
 		fmt.Println("canBuildWonder not enough resource")
 		return false
 	}
@@ -1400,7 +1940,7 @@ func (p *PlayerBoard) canBuildWonder(step int) bool {
 	return true
 }
 
-func (p *PlayerBoard) buildWonder(step int) {
+func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 	csm := p.game.cardStackManager
 	card := csm.getFirstCard(p.stacks[WONDER_NOT_COMPLETED])
 	school := p.game.cardSchools[card.schoolId]
@@ -1411,9 +1951,13 @@ func (p *PlayerBoard) buildWonder(step int) {
 	for i := 0; i < step; i++ {
 		cost += allSteps[stepsBuilt+i]
 	}
+	cost -= reducedCost
+	if cost < 0 {
+		cost = 0
+	}
 
 	p.removeUsableWhiteTokens(1)
-	p.spendResource(cost)
+	p.spendResource(cost, false)
 
 	if step+stepsBuilt < len(allSteps) { // Not completed
 		p.specialTokenManager.processRequest(&RemoveTokenRequest{

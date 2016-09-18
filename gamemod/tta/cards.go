@@ -5,7 +5,6 @@ type CardType int
 const (
 	CARDTYPE_LEADER                    = 1
 	CARDTYPE_WONDER                    = 2
-	CARDTYPE_ACTION                    = 3
 	CARDTYPE_TECH                      = 4
 	CARDTYPE_TECH_SPECIAL              = 5
 	CARDTYPE_TECH_SPECIAL_CIVIL        = 6
@@ -26,6 +25,22 @@ const (
 	CARDTYPE_TECH_MILLI_ARTILLERY      = 21
 	CARDTYPE_TECH_MILLI_AIRFORCE       = 22
 	CARDTYPE_TECH_GOVERNMENT           = 23
+
+	CARDTYPE_ACTION                     = 24
+	CARDTYPE_ACTION_BREAKTHROUGH        = 25
+	CARDTYPE_ACTION_CULTURAL_HERITAGE   = 26
+	CARDTYPE_ACTION_EFFICIENT_UPGRADE   = 27
+	CARDTYPE_ACTION_ENDOWMENT_FOR_ARTS  = 28
+	CARDTYPE_ACTION_ENGINEERING_GENIUS  = 29
+	CARDTYPE_ACTION_FRUGALITY           = 30
+	CARDTYPE_ACTION_MILITARY_BUILD_UP   = 31
+	CARDTYPE_ACTION_PATRIOTISM          = 32
+	CARDTYPE_ACTION_RESERVES            = 33
+	CARDTYPE_ACTION_REVOLUTIONARY_IDEA  = 34
+	CARDTYPE_ACTION_RICH_LAND           = 35
+	CARDTYPE_ACTION_STOCKPILE           = 36
+	CARDTYPE_ACTION_URBAN_GROWTH        = 37
+	CARDTYPE_ACTION_WAVE_OF_NATIONALISM = 38
 
 	CARDTYPE_DEFCOL     = 101
 	CARDTYPE_TACTIC     = 102
@@ -108,6 +123,15 @@ type CardSchool struct {
 func (s *CardSchool) hasType(cardType CardType) bool {
 	for _, t := range s.cardTypes {
 		if t == cardType {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *CardSchool) hasSpecialAbility(specialAbility int) bool {
+	for _, sa := range s.specialAbilities {
+		if sa == specialAbility {
 			return true
 		}
 	}

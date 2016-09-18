@@ -31,6 +31,15 @@ func cardIdToIndex(p *PlayerBoard, cardId int) (stack int, index int, ok bool) {
 	return 0, 0, false
 }
 
+func getIthHandCardSchool(game *TtaGame, index int) *CardSchool {
+	csm := game.cardStackManager
+	if index < 0 || index >= csm.getStackSize(game.players[0].stacks[HAND]) {
+		return nil
+	}
+	card := csm.cardStacks[game.players[0].stacks[HAND]][index]
+	return game.cardSchools[card.schoolId]
+}
+
 func toAttachment(game *TtaGame, splitted []string) interface{} {
 	result := make([]int, 0)
 	for i := 2; i < len(splitted); i++ {
@@ -48,6 +57,41 @@ func toAttachment(game *TtaGame, splitted []string) interface{} {
 	}
 }
 
+func toPlayAttachment(game *TtaGame, splitted []string) interface{} {
+	result := make([]int, 0)
+	c := -1
+	for i := 1; i < len(splitted); i++ {
+		r, err := strconv.Atoi(splitted[i])
+		if err != nil {
+			return nil
+		}
+		if i == 1 {
+			c = r
+		} else {
+			result = append(result, r)
+		}
+	}
+
+	if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
+		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		if !ok {
+			return nil
+		}
+		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		if !ok {
+			return nil
+		}
+		if stack1 != stack2 {
+			return nil
+		}
+
+		return []int{stack1, index1, index2}
+	} else if len(result) == 1 {
+		return result[0]
+	} else {
+		return result
+	}
+}
 func parseCommand(game *TtaGame, command string) {
 	splitted := strings.Split(command, " ")
 	if len(splitted) < 1 {
@@ -86,11 +130,12 @@ func parseCommand(game *TtaGame, command string) {
 		} else {
 			index, err := strconv.Atoi(splitted[1])
 
-			att := toAttachment(game, splitted)
+			att := toPlayAttachment(game, splitted)
 
-			if err != nil || index < 0 || index > game.players[0].getHandSize() ||
+			if err != nil || index < 0 || index > game.players[0].getCivilHandSize() ||
 				!game.players[0].canPlayHand(index, att) {
 				fmt.Println("Invliad play command ", err)
+				fmt.Println("Invliad play command ", game.players[0].canPlayHand(index, att))
 			} else {
 				game.players[0].playHand(index, att)
 			}
@@ -114,7 +159,7 @@ func parseCommand(game *TtaGame, command string) {
 			if !ok || !game.players[0].canBuild(stack, index) {
 				fmt.Println("Invalid build command")
 			} else {
-				game.players[0].build(stack, index)
+				game.players[0].build(stack, index, 0)
 			}
 		}
 	case "upgrade", "u":
@@ -145,19 +190,28 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("Invalid upgrade command")
 				return
 			}
-			if !game.players[0].canUpgrade(stack1, index1, index2) {
+			if !game.players[0].canUpgrade(stack1, index1, index2, 0) {
 				fmt.Println("Invalid build command")
 			} else {
 				fmt.Println("upgrade")
-				game.players[0].upgrade(stack1, index1, index2)
+				game.players[0].upgrade(stack1, index1, index2, 0)
 			}
 		}
 	case "buildwonder", "bw":
-		if !game.players[0].canBuildWonder(1) {
+		step := 1
+		if len(splitted) >= 2 {
+			var err error
+			step, err = strconv.Atoi(splitted[1])
+			if err != nil {
+				fmt.Println("Invalid buildwonder command")
+				return
+			}
+		}
+		if !game.players[0].canBuildWonder(step, 0) {
 			fmt.Println("Invalid buildwonder command")
 		} else {
 			fmt.Println("upgrade")
-			game.players[0].buildWonder(1)
+			game.players[0].buildWonder(step, 0)
 		}
 	}
 }

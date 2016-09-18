@@ -1153,16 +1153,24 @@ func (p *PlayerBoard) canPlayFrugality(card Card) bool {
 
 func (p *PlayerBoard) canPlayRichLand(card Card, stacksAndIndexes []int) bool {
 	school := p.game.cardSchools[card.schoolId]
-	if len(stacksAndIndexes) != 2 { // Used to build
-		return false
-	} else if len(stacksAndIndexes) != 3 { // Used to upgrade
-
+	if len(stacksAndIndexes) == 2 { // Used to build
 		stack := stacksAndIndexes[0]
 		index := stacksAndIndexes[1]
 
 		if stack == FARM ||
 			stack == MINE {
-			return p.canBuild(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+			return p.canBuild(stack, index, school.actionBonus)
+		} else {
+			return false
+		}
+	} else if len(stacksAndIndexes) == 3 { // Used to upgrade
+		stack := stacksAndIndexes[0]
+		index1 := stacksAndIndexes[1]
+		index2 := stacksAndIndexes[2]
+
+		if stack == FARM ||
+			stack == MINE {
+			return p.canUpgrade(stack, index1, index2, school.actionBonus)
 		} else {
 			return false
 		}
@@ -1182,7 +1190,7 @@ func (p *PlayerBoard) canPlayUrbanGrowth(card Card, stacksAndIndexes []int) bool
 			stack == URBAN_ARENA ||
 			stack == URBAN_LIBRARY ||
 			stack == URBAN_THEATER {
-			return p.canBuild(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+			return p.canBuild(stack, index, school.actionBonus)
 		} else {
 			return false
 		}
@@ -1477,17 +1485,30 @@ func (p *PlayerBoard) playRevolutionaryIdea(card Card, index int, attachment int
 	p.gainTech(school.actionBonus)
 }
 
-func (p *PlayerBoard) playRichLand(card Card, index int, attachment interface{}) {
+func (p *PlayerBoard) playRichLandOrUrbanGrowth(card Card, index int, attachment interface{}) {
 	csm := p.game.cardStackManager
-	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
-	school := p.game.cardSchools[card.schoolId]
 	csm.processRequest(&BanishCardRequest{
 		position: CardPosition{
 			stackId:  p.stacks[HAND],
 			position: index,
 		},
 	})
-	p.build(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
+	school := p.game.cardSchools[card.schoolId]
+	if len(stacksAndIndexes) == 2 { // Build
+		stack := stacksAndIndexes[0]
+		index := stacksAndIndexes[1]
+		p.build(stack, index, school.actionBonus)
+	} else if len(stacksAndIndexes) == 3 { // Upgrade
+		stack := stacksAndIndexes[0]
+		index1 := stacksAndIndexes[1]
+		index2 := stacksAndIndexes[2]
+		p.upgrade(stack, index1, index2, school.actionBonus)
+	}
+}
+
+func (p *PlayerBoard) playRichLand(card Card, index int, attachment interface{}) {
+	p.playRichLandOrUrbanGrowth(card, index, attachment)
 }
 
 func (p *PlayerBoard) playStockpile(card Card, index int, attachment interface{}) {
@@ -1504,16 +1525,7 @@ func (p *PlayerBoard) playStockpile(card Card, index int, attachment interface{}
 }
 
 func (p *PlayerBoard) playUrbanGrowth(card Card, index int, attachment interface{}) {
-	csm := p.game.cardStackManager
-	stacksAndIndexes := attachmentAsIntList(attachment, []int{})
-	school := p.game.cardSchools[card.schoolId]
-	csm.processRequest(&BanishCardRequest{
-		position: CardPosition{
-			stackId:  p.stacks[HAND],
-			position: index,
-		},
-	})
-	p.build(stacksAndIndexes[0], stacksAndIndexes[1], school.actionBonus)
+	p.playRichLandOrUrbanGrowth(card, index, attachment)
 }
 
 func (p *PlayerBoard) playWaveOfNationalism(card Card, index int, attachment interface{}) {
@@ -1706,7 +1718,7 @@ func (p *PlayerBoard) getModifiedCost(card Card) int {
 	return cost
 }
 
-func (p *PlayerBoard) canBuild(stack int, index int) bool {
+func (p *PlayerBoard) canBuild(stack int, index int, reducedCost int) bool {
 	csm := p.game.cardStackManager
 
 	// Has free worker
@@ -1775,7 +1787,10 @@ func (p *PlayerBoard) canBuild(stack int, index int) bool {
 		}
 	}
 	// Cost enough
-	cost := p.getModifiedCost(card)
+	cost := p.getModifiedCost(card) - reducedCost
+	if cost < 0 {
+		cost = 0
+	}
 
 	if p.getResourceTotal(military) < cost {
 		fmt.Println("canBuild not enough tech")

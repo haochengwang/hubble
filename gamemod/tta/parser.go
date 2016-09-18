@@ -86,6 +86,48 @@ func toPlayAttachment(game *TtaGame, splitted []string) interface{} {
 		}
 
 		return []int{stack1, index1, index2}
+	} else if len(result) == 1 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_RICH_LAND) {
+		stack, index, ok := cardIdToIndex(game.players[0], result[0])
+		if !ok {
+			return nil
+		}
+
+		return []int{stack, index}
+	} else if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_RICH_LAND) {
+		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		if !ok {
+			return nil
+		}
+		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		if !ok {
+			return nil
+		}
+		if stack1 != stack2 {
+			return nil
+		}
+
+		return []int{stack1, index1, index2}
+	} else if len(result) == 1 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
+		stack, index, ok := cardIdToIndex(game.players[0], result[0])
+		if !ok {
+			return nil
+		}
+
+		return []int{stack, index}
+	} else if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
+		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		if !ok {
+			return nil
+		}
+		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		if !ok {
+			return nil
+		}
+		if stack1 != stack2 {
+			return nil
+		}
+
+		return []int{stack1, index1, index2}
 	} else if len(result) == 1 {
 		return result[0]
 	} else {
@@ -156,7 +198,7 @@ func parseCommand(game *TtaGame, command string) {
 				return
 			}
 			stack, index, ok := cardIdToIndex(game.players[0], cardId)
-			if !ok || !game.players[0].canBuild(stack, index) {
+			if !ok || !game.players[0].canBuild(stack, index, 0) {
 				fmt.Println("Invalid build command")
 			} else {
 				game.players[0].build(stack, index, 0)

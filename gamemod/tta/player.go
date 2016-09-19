@@ -595,13 +595,14 @@ func (p *PlayerBoard) iterateOverTechs(f func(*CardSchool) int, canBeNegative bo
 	return result
 }
 
-func (p *PlayerBoard) iterateOverUnitsAndEverything(f func(*CardSchool) int, canBeNegative bool) int {
+func (p *PlayerBoard) iterateOverUnitsAndEverything(
+	f func(*CardSchool) int, reducer func(int, int) int, canBeNegative bool) int {
 	csm := p.game.cardStackManager
 	allSchools := p.game.cardSchools
 	result := 0
 	// Government
 	governmentCard := csm.getFirstCard(p.stacks[GOVERNMENT])
-	result += f(allSchools[governmentCard.schoolId])
+	result = f(allSchools[governmentCard.schoolId])
 
 	// Army, Farms, mines and urban buildings counts yellow tokens
 	for _, t := range []int{MILI_INFANTRY,
@@ -617,8 +618,8 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(f func(*CardSchool) int, can
 		URBAN_THEATER,
 	} {
 		for _, card := range csm.cardStacks[p.stacks[t]] {
-			result += f(allSchools[card.schoolId]) *
-				p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
+			result = reducer(result, f(allSchools[card.schoolId])*
+				p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW))
 		}
 	}
 
@@ -631,17 +632,17 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(f func(*CardSchool) int, can
 	} {
 		specialTechCard := csm.getFirstCard(p.stacks[t])
 		if specialTechCard != nil {
-			result += f(allSchools[specialTechCard.schoolId])
+			result = reducer(result, f(allSchools[specialTechCard.schoolId]))
 		}
 	}
 
 	// Leader
 	for _, card := range csm.cardStacks[p.stacks[LEADER]] {
-		result += f(allSchools[card.schoolId])
+		result = reducer(result, f(allSchools[card.schoolId]))
 	}
 	// Wonders
 	for _, card := range csm.cardStacks[p.stacks[WONDER_COMPLETED]] {
-		result += f(allSchools[card.schoolId])
+		result = reducer(result, f(allSchools[card.schoolId]))
 	}
 
 	if result < 0 && !canBeNegative {
@@ -650,32 +651,66 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(f func(*CardSchool) int, can
 	return result
 }
 
+func (p *PlayerBoard) sumOverUnitsAndEverything(
+	f func(*CardSchool) int, canBeNegative bool) int {
+	return p.iterateOverUnitsAndEverything(f, func(a int, b int) int {
+		return a + b
+	}, canBeNegative)
+}
+
+func (p *PlayerBoard) maxOverUnitsAndEverything(
+	f func(*CardSchool) int, canBeNegative bool) int {
+	return p.iterateOverUnitsAndEverything(f, func(a int, b int) int {
+		if a > b {
+			return a
+		} else {
+			return b
+		}
+	}, canBeNegative)
+}
+
 func (p *PlayerBoard) calcWhiteTokenLimit() int {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionWhiteToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcRedTokenLimit() int {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionRedToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcCultureInc() int {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		if p.specialAbilityAvailable(SA_CHARLIE_CHAPLIN) &&
+			school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
+			return school.productionCulture * 2
+		}
 		return school.productionCulture
 	}, false)
 }
 
 func (p *PlayerBoard) calcTechInc() int {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	tech := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionTech
 	}, false)
+
+	if p.specialAbilityAvailable(SA_LIB_LAB_AMPLIFY) {
+		tech += p.maxOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_URBAN_LAB) ||
+				school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) {
+				return school.age
+			}
+			return 0
+		}, false)
+	}
+
+	return tech
 }
 
 func (p *PlayerBoard) calcPower() int {
-	power := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	power := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		if p.specialAbilityAvailable(SA_GREAT_WALL) && (school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
 			school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY)) {
 			return school.productionPower + 1
@@ -685,7 +720,7 @@ func (p *PlayerBoard) calcPower() int {
 	}, false)
 
 	if p.specialAbilityAvailable(SA_NAPOLEON_BONAPARTE) {
-		infantry := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		infantry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 			if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) {
 				return 1
 			} else {
@@ -696,7 +731,7 @@ func (p *PlayerBoard) calcPower() int {
 			infantry = 1
 		}
 
-		cavalry := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		cavalry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 			if school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) {
 				return 1
 			} else {
@@ -707,7 +742,7 @@ func (p *PlayerBoard) calcPower() int {
 			cavalry = 1
 		}
 
-		artilery := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		artilery := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 			if school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
 				return 1
 			} else {
@@ -718,7 +753,7 @@ func (p *PlayerBoard) calcPower() int {
 			artilery = 1
 		}
 
-		airforce := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		airforce := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 			if school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE) {
 				return 1
 			} else {
@@ -735,14 +770,14 @@ func (p *PlayerBoard) calcPower() int {
 }
 
 func (p *PlayerBoard) calcUrbanLimit() int {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionUrbanLimit
 	}, false)
 }
 
 func (p *PlayerBoard) calcHappiness() int {
 	if p.specialAbilityAvailable(SA_ST_PETERS_BASILICA) {
-		return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 			happiness := school.productionHappiness
 			if happiness > 0 {
 				return happiness + 1
@@ -750,13 +785,13 @@ func (p *PlayerBoard) calcHappiness() int {
 			return happiness
 		}, false)
 	}
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionHappiness
 	}, false)
 }
 
 func (p *PlayerBoard) specialAbilityAvailable(saId int) bool {
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		if school.hasSpecialAbility(saId) {
 			return 1
 		} else {
@@ -1794,9 +1829,15 @@ func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
 					position: 0,
 				},
 			})
-			fmt.Println("before realign: ", p.getUsableWhiteTokens())
 			p.realignWhiteRedTokens()
-			fmt.Println("after realign: ", p.getUsableWhiteTokens())
+		}
+
+		if p.specialAbilityAvailable(SA_LEONARDO_DA_VINCI) {
+			p.gainResource(1)
+		} else if p.specialAbilityAvailable(SA_ISAAC_NEWTON) {
+			p.removeUsableWhiteTokens(-1)
+		} else if p.specialAbilityAvailable(SA_ALBERT_EINSTEIN) {
+			p.gainCulture(3)
 		}
 	} else if school.hasType(CARDTYPE_ACTION) {
 		if school.hasType(CARDTYPE_ACTION_BREAKTHROUGH) {
@@ -2208,7 +2249,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 		p.realignWhiteRedTokens()
 		// Age III wonders
 		if school.hasSpecialAbility(SA_HOLLYWOOD) {
-			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 				if school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) ||
 					school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
 					return 2 * school.productionCulture
@@ -2216,7 +2257,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 				return 0
 			}, false))
 		} else if school.hasSpecialAbility(SA_INTERNET) {
-			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 				if school.hasType(CARDTYPE_TECH_URBAN) {
 					return school.productionCulture + school.productionTech +
 						school.productionPower
@@ -2231,7 +2272,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 				return 0
 			}, false))
 		} else if school.hasSpecialAbility(SA_FAST_FOOD_CHAINS) {
-			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 				if school.hasType(CARDTYPE_TECH_MILLI) ||
 					school.hasType(CARDTYPE_TECH_URBAN) {
 					return 1

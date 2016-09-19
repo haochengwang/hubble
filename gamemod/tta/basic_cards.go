@@ -919,7 +919,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:              1,
 		cardTypes:        []CardType{CARDTYPE_LEADER},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_LEONARDO_DA_VINCI},
+		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_LEONARDO_DA_VINCI},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:       "Genghis Khan",
@@ -994,7 +994,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:              2,
 		cardTypes:        []CardType{CARDTYPE_LEADER},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_ISAAC_NEWTON},
+		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_ISAAC_NEWTON},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:       "Albert Einstein",
@@ -1002,7 +1002,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:              3,
 		cardTypes:        []CardType{CARDTYPE_LEADER},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_ALBERT_EINSTEIN},
+		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_ALBERT_EINSTEIN},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:        "Mahatma Gandhi",

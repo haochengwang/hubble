@@ -675,19 +675,63 @@ func (p *PlayerBoard) calcTechInc() int {
 }
 
 func (p *PlayerBoard) calcPower() int {
-	if p.specialAbilityAvailable(SA_GREAT_WALL) {
-		return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
-			if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
-				return school.productionPower + 1
+	power := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		if p.specialAbilityAvailable(SA_GREAT_WALL) && (school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
+			school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY)) {
+			return school.productionPower + 1
+		} else {
+			return school.productionPower
+		}
+	}, false)
+
+	if p.specialAbilityAvailable(SA_NAPOLEON_BONAPARTE) {
+		infantry := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) {
+				return 1
 			} else {
-				return school.productionPower
+				return 0
 			}
 		}, false)
+		if infantry > 1 {
+			infantry = 1
+		}
+
+		cavalry := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) {
+				return 1
+			} else {
+				return 0
+			}
+		}, false)
+		if cavalry > 1 {
+			cavalry = 1
+		}
+
+		artilery := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
+				return 1
+			} else {
+				return 0
+			}
+		}, false)
+		if artilery > 1 {
+			artilery = 1
+		}
+
+		airforce := p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE) {
+				return 1
+			} else {
+				return 0
+			}
+		}, false)
+		if airforce > 1 {
+			airforce = 1
+		}
+
+		power += infantry*2 + cavalry*2 + artilery*2 + airforce*2
 	}
-	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
-		return school.productionPower
-	}, false)
+	return power
 }
 
 func (p *PlayerBoard) calcUrbanLimit() int {

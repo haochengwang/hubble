@@ -145,6 +145,33 @@ func paintYellowBank(player *PlayerBoard) ([][]rune, int) {
 	for i := 0; i < player.getFreeYellowTokens(); i++ {
 		bgRunes[1][i*2+1] = '*'
 	}
+
+	// Happiness
+	type Point struct {
+		x, y int
+	}
+
+	points := []Point{
+		Point{x: 37, y: 0},
+		Point{x: 34, y: 0},
+		Point{x: 28, y: 0},
+		Point{x: 22, y: 0},
+		Point{x: 18, y: 0},
+		Point{x: 14, y: 0},
+		Point{x: 10, y: 0},
+		Point{x: 6, y: 0},
+		Point{x: 2, y: 0},
+	}
+
+	for i := 0; i <= 8; i++ {
+		if i <= player.calcHappiness() {
+			bgRunes[points[i].y][points[i].x] = '@'
+		} else if i <= player.getNeededHappiness() && i <= player.calcHappiness()+player.getFreeWorkers() {
+			bgRunes[points[i].y][points[i].x] = 'W'
+		} else if i <= player.getNeededHappiness() {
+			bgRunes[points[i].y][points[i].x] = '!'
+		}
+	}
 	return bgRunes, 3
 }
 

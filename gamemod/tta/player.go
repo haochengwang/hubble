@@ -230,6 +230,22 @@ func (p *PlayerBoard) getCivilHandSize() int {
 	return csm.getStackSize(p.stacks[HAND])
 }
 
+func (p *PlayerBoard) getMaxCivilHandSize() int {
+	handSize := p.calcWhiteTokenLimit()
+	if p.specialAbilityAvailable(SA_LIB_OF_ALEXANDRIA) {
+		handSize += 1
+	}
+	return handSize
+}
+
+func (p *PlayerBoard) getMaxMilitaryHandSize() int {
+	handSize := p.calcRedTokenLimit()
+	if p.specialAbilityAvailable(SA_LIB_OF_ALEXANDRIA) {
+		handSize += 1
+	}
+	return handSize
+}
+
 func (p *PlayerBoard) getUrbanCount(stack int) int {
 	csm := p.game.cardStackManager
 	result := 0
@@ -290,6 +306,30 @@ func (p *PlayerBoard) getIncreasePopBaseCost() int {
 		return 3
 	default:
 		return 2
+	}
+}
+
+func (p *PlayerBoard) getNeededHappiness() int {
+	freeYellow := p.getFreeYellowTokens()
+	switch freeYellow {
+	case 0:
+		return 8
+	case 1, 2:
+		return 7
+	case 3, 4:
+		return 6
+	case 5, 6:
+		return 5
+	case 7, 8:
+		return 4
+	case 9, 10:
+		return 3
+	case 11, 12:
+		return 2
+	case 13, 14, 15, 16:
+		return 1
+	default:
+		return 0
 	}
 }
 
@@ -510,7 +550,52 @@ func (p *PlayerBoard) hasLeader() bool {
 	return csm.getStackSize(p.stacks[LEADER]) > 0
 }
 
-func (p *PlayerBoard) calcPlayerFeatureSum(f func(*CardSchool) int, canBeNegative bool) int {
+func (p *PlayerBoard) iterateOverTechs(f func(*CardSchool) int, canBeNegative bool) int {
+	csm := p.game.cardStackManager
+	allSchools := p.game.cardSchools
+	result := 0
+	// Government
+	governmentCard := csm.getFirstCard(p.stacks[GOVERNMENT])
+	result += f(allSchools[governmentCard.schoolId])
+
+	// Army, Farms, mines and urban buildings counts yellow tokens
+	for _, t := range []int{MILI_INFANTRY,
+		MILI_CAVALRY,
+		MILI_ARTILERY,
+		MILI_AIRFORCE,
+		FARM,
+		MINE,
+		URBAN_TEMPLE,
+		URBAN_LAB,
+		URBAN_ARENA,
+		URBAN_LIBRARY,
+		URBAN_THEATER,
+	} {
+		for _, card := range csm.cardStacks[p.stacks[t]] {
+			result += f(allSchools[card.schoolId])
+		}
+	}
+
+	// Special technology
+	for _, t := range []int{
+		TECH_SPECIAL_CIVIL,
+		TECH_SPECIAL_WARFARE,
+		TECH_SPECIAL_COLONIZE,
+		TECH_SPECIAL_CONSTRUCTION,
+	} {
+		specialTechCard := csm.getFirstCard(p.stacks[t])
+		if specialTechCard != nil {
+			result += f(allSchools[specialTechCard.schoolId])
+		}
+	}
+
+	if result < 0 && !canBeNegative {
+		result = 0
+	}
+	return result
+}
+
+func (p *PlayerBoard) iterateOverUnitsAndEverything(f func(*CardSchool) int, canBeNegative bool) int {
 	csm := p.game.cardStackManager
 	allSchools := p.game.cardSchools
 	result := 0
@@ -566,39 +651,74 @@ func (p *PlayerBoard) calcPlayerFeatureSum(f func(*CardSchool) int, canBeNegativ
 }
 
 func (p *PlayerBoard) calcWhiteTokenLimit() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionWhiteToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcRedTokenLimit() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionRedToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcCultureInc() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionCulture
 	}, false)
 }
 
 func (p *PlayerBoard) calcTechInc() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionTech
 	}, false)
 }
 
 func (p *PlayerBoard) calcPower() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	if p.specialAbilityAvailable(SA_GREAT_WALL) {
+		return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
+				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
+				return school.productionPower + 1
+			} else {
+				return school.productionPower
+			}
+		}, false)
+	}
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionPower
 	}, false)
 }
 
 func (p *PlayerBoard) calcUrbanLimit() int {
-	return p.calcPlayerFeatureSum(func(school *CardSchool) int {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
 		return school.productionUrbanLimit
 	}, false)
+}
+
+func (p *PlayerBoard) calcHappiness() int {
+	if p.specialAbilityAvailable(SA_ST_PETERS_BASILICA) {
+		return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+			happiness := school.productionHappiness
+			if happiness > 0 {
+				return happiness + 1
+			}
+			return happiness
+		}, false)
+	}
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		return school.productionHappiness
+	}, false)
+}
+
+func (p *PlayerBoard) specialAbilityAvailable(saId int) bool {
+	return p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+		if school.hasSpecialAbility(saId) {
+			return 1
+		} else {
+			return 0
+		}
+	}, false) > 0
 }
 
 func (p *PlayerBoard) canTakeCardFromWheel(index int) bool {
@@ -659,8 +779,20 @@ func (p *PlayerBoard) takeCardFromWheelCost(index int) (cost int) {
 	card := csm.getFirstCard(p.game.greatWheel[index])
 	school := p.game.cardSchools[card.schoolId]
 	if school.hasType(CARDTYPE_WONDER) {
-		cost += csm.getStackSize(p.stacks[WONDER_COMPLETED])
-		// TODO: Taj Mahal, Hammurabi, Mich. here
+		if !p.specialAbilityAvailable(SA_MICHELANGELO) {
+			cost += csm.getStackSize(p.stacks[WONDER_COMPLETED])
+		}
+	}
+
+	if p.specialAbilityAvailable(SA_HAMMURABI) && school.hasType(CARDTYPE_LEADER) {
+		cost -= 1
+	}
+
+	if school.hasSpecialAbility(SA_TAJ_MAHAL) {
+		cost -= 2
+	}
+	if cost < 0 {
+		cost = 0
 	}
 	return
 }
@@ -719,6 +851,13 @@ func (p *PlayerBoard) takeCardFromWheel(index int) {
 				tokenType:  TOKEN_DEFAULT,
 				tokenCount: 1,
 			})
+		}
+
+		// Aristotle
+		if p.specialAbilityAvailable(SA_ARISTOTLE) {
+			if school.hasType(CARDTYPE_TECH) {
+				p.gainTech(1)
+			}
 		}
 	}
 }
@@ -948,7 +1087,7 @@ func (p *PlayerBoard) corrupt() {
 			p.spendCrop(c)
 		} else {
 			p.spendAllCrop()
-			// TODO: reduce culture?
+			p.loseCulture((crop - c) * 4)
 		}
 	}
 }
@@ -1045,12 +1184,17 @@ func (p *PlayerBoard) gainResource(amount int) {
 	}
 }
 
-func (p *PlayerBoard) productResource() {
+func (p *PlayerBoard) produceResource() {
 	csm := p.game.cardStackManager
 	// Need reverse iterate
+	bestMine := true
 	for i := csm.getStackSize(p.stacks[MINE]) - 1; i >= 0; i-- {
 		card := csm.cardStacks[p.stacks[MINE]][i]
 		amount := p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
+
+		if p.specialAbilityAvailable(SA_TRANSCONT_RR) && bestMine {
+			amount += 1
+		}
 		if amount > p.getFreeBlueTokens() {
 			amount = p.getFreeBlueTokens()
 		}
@@ -1068,6 +1212,7 @@ func (p *PlayerBoard) productResource() {
 			tokenType:  TOKEN_BLUE,
 			tokenCount: amount,
 		})
+		bestMine = false
 	}
 }
 
@@ -1089,7 +1234,7 @@ func (p *PlayerBoard) doProductionPhase() {
 	p.corrupt()
 	p.produceCrop()
 	p.consumeCrop()
-	p.productResource()
+	p.produceResource()
 	p.refillWhiteRedTokens()
 }
 
@@ -1101,7 +1246,11 @@ func attachmentAsInt(attachment interface{}, def int) int {
 	case int:
 		return attachment
 	case []int:
-		return attachment[0]
+		if len(attachment) <= 0 {
+			return def
+		} else {
+			return attachment[0]
+		}
 	default:
 		return def
 	}
@@ -1677,7 +1826,9 @@ func (p *PlayerBoard) canIncreasePop() bool {
 	}
 	cropCost := p.getIncreasePopBaseCost()
 
-	// TODO Moses
+	if p.specialAbilityAvailable(SA_MOSES) {
+		cropCost -= 1
+	}
 	if p.getCropTotal() < cropCost {
 		fmt.Println("Increase pop not enough crop")
 		return false
@@ -1688,6 +1839,9 @@ func (p *PlayerBoard) canIncreasePop() bool {
 func (p *PlayerBoard) increasePop() {
 	p.removeUsableWhiteTokens(1)
 	cropCost := p.getIncreasePopBaseCost()
+	if p.specialAbilityAvailable(SA_MOSES) {
+		cropCost -= 1
+	}
 	fmt.Println("increasePop ", cropCost)
 	p.spendCrop(cropCost)
 	p.specialTokenManager.processRequest(&MoveTokenRequest{
@@ -2008,6 +2162,42 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 			},
 		})
 		p.realignWhiteRedTokens()
+		// Age III wonders
+		if school.hasSpecialAbility(SA_HOLLYWOOD) {
+			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+				if school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) ||
+					school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
+					return 2 * school.productionCulture
+				}
+				return 0
+			}, false))
+		} else if school.hasSpecialAbility(SA_INTERNET) {
+			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+				if school.hasType(CARDTYPE_TECH_URBAN) {
+					return school.productionCulture + school.productionTech +
+						school.productionPower
+				}
+				return 0
+			}, false))
+		} else if school.hasSpecialAbility(SA_FIRST_SPACE_FLIGHT) {
+			p.gainCulture(p.iterateOverTechs(func(school *CardSchool) int {
+				if school.hasType(CARDTYPE_TECH_URBAN) {
+					return school.age
+				}
+				return 0
+			}, false))
+		} else if school.hasSpecialAbility(SA_FAST_FOOD_CHAINS) {
+			p.gainCulture(p.iterateOverUnitsAndEverything(func(school *CardSchool) int {
+				if school.hasType(CARDTYPE_TECH_MILLI) ||
+					school.hasType(CARDTYPE_TECH_URBAN) {
+					return 1
+				} else if school.hasType(CARDTYPE_TECH_FARM) ||
+					school.hasType(CARDTYPE_TECH_MINE) {
+					return 2
+				}
+				return 0
+			}, false))
+		}
 	}
 
 }

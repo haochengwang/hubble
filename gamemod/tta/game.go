@@ -58,7 +58,8 @@ func (g *TtaGame) initBasicCards() {
 			school.schoolId == 5 ||
 			school.schoolId == 9 ||
 			school.schoolId == 13 ||
-			school.schoolId == 25 {
+			school.schoolId == 25 ||
+			school.schoolId == 35 {
 			continue
 		}
 		for i := 0; i < school.cardCounts[0]; i++ {

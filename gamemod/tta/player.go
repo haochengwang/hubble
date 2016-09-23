@@ -1,6 +1,6 @@
 package main
 
-import (
+/*import (
 	"fmt"
 )
 
@@ -2357,3 +2357,4 @@ func (p *PlayerBoard) useCivilSpecialAbility(sa int, attachment interface{}) {
 		p.markPerTurnSpecialAbility(SA_HAMMURABI)
 	}
 }
+*/

@@ -1,6 +1,6 @@
 package main
 
-import (
+/*import (
 	"bufio"
 	"fmt"
 	"os"
@@ -537,3 +537,4 @@ func main() {
 		parseCommand(game, string(line))
 	}
 }
+*/

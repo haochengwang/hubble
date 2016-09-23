@@ -2,14 +2,19 @@ package main
 
 import (
 	"math/rand"
+	
+	"hubble/gamemod"
 )
 
 type UserStackId int
 
+type TtaGameOptions {
+	playerCount int
+	peace bool
+}
+
 type TtaGame struct {
-	cardStackManager   *CardStackUniversalManager
-	globalTokenManager *TokenBankUniversalManager
-	cardTokenManager   *TokenBankUniversalManager
+	
 
 	// All card schools
 	cardSchools map[int]*CardSchool
@@ -19,7 +24,7 @@ type TtaGame struct {
 	players    []*PlayerBoard
 }
 
-func NewTta() (result *TtaGame) {
+func NewTta(options TtaGameOptions) (result *TtaGame) {
 	game := &TtaGame{
 		cardStackManager:   NewCardStackUniversalManager(),
 		globalTokenManager: NewTokenBankUniversalManager(),
@@ -29,9 +34,6 @@ func NewTta() (result *TtaGame) {
 		players:            make([]*PlayerBoard, 2),
 	}
 	game.cardSchools = InitBasicCardSchools()
-	for i := 0; i < 2; i++ {
-		game.players[i] = initPlayerBoard(game)
-	}
 
 	for i := 0; i < 13; i++ {
 		game.greatWheel[i] = game.cardStackManager.newStack()

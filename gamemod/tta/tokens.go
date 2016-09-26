@@ -32,10 +32,6 @@ type ClearTokenRequest struct {
 	tokenType int
 }
 
-type ClearAllTokensRequest struct {
-	bankId int
-}
-
 type TokenBankUniversalManager struct {
 	tokenBanks map[int]TokenBank
 }
@@ -95,9 +91,5 @@ func (m *TokenBankUniversalManager) processRequest(request interface{}) {
 	case *MoveTokenRequest:
 		m.modifyToken(request.sourceBankId, request.tokenType, -request.tokenCount)
 		m.modifyToken(request.targetBankId, request.tokenType, request.tokenCount)
-	case *ClearTokenRequest:
-		m.setTokenCount(request.bankId, request.tokenType, 0)
-	case *ClearAllTokensRequest:
-		m.tokenBanks = make(map[int]TokenBank)
 	}
 }

@@ -46,8 +46,6 @@ const (
 	LEADER_I_TAKEN
 	LEADER_II_TAKEN
 	LEADER_III_TAKEN
-	PER_TURN_SKILLS_COUNTER
-	PER_GAME_SKILLS_COUNTER
 )
 
 const (
@@ -56,7 +54,6 @@ const (
 	TOKEN_BLUE
 	TOKEN_WHITE
 	TOKEN_RED
-	TOKEN_ACTION_CARD_THIS_TURN
 )
 
 type PlayerBoard struct {
@@ -65,7 +62,6 @@ type PlayerBoard struct {
 	stacks              []int
 	techTokenManager    *TokenBankUniversalManager
 	specialTokenManager *TokenBankUniversalManager
-	perTurnTokenManager *TokenBankUniversalManager
 }
 
 func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
@@ -101,6 +97,13 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 	})
 	csm.processRequest(&AddCardRequest{
 		position: CardPosition{
+			stackId:  stacks[MINE],
+			position: 1,
+		},
+		schoolId: 8,
+	})
+	csm.processRequest(&AddCardRequest{
+		position: CardPosition{
 			stackId:  stacks[URBAN_TEMPLE],
 			position: 0,
 		},
@@ -124,6 +127,7 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 	agricultureCard := csm.getFirstCard(stacks[FARM])
 	bronzeCard := csm.getFirstCard(stacks[MINE])
 
+	oilCard := csm.cardStacks[stacks[MINE]][1]
 	warriorCard := csm.getFirstCard(stacks[MILI_INFANTRY])
 	governmentCard := csm.getFirstCard(stacks[GOVERNMENT])
 
@@ -131,6 +135,7 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 
 	game.cardTokenManager.setTokenCount(agricultureCard.id, TOKEN_YELLOW, 2)
 	game.cardTokenManager.setTokenCount(bronzeCard.id, TOKEN_YELLOW, 2)
+	game.cardTokenManager.setTokenCount(oilCard.id, TOKEN_YELLOW, 1)
 	game.cardTokenManager.setTokenCount(warriorCard.id, TOKEN_YELLOW, 1)
 	game.cardTokenManager.setTokenCount(governmentCard.id, TOKEN_WHITE, 4)
 	game.cardTokenManager.setTokenCount(governmentCard.id, TOKEN_RED, 2)
@@ -145,7 +150,6 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 
 	// Prepare tech bank Manager
 	techTokenManager := NewTokenBankUniversalManager()
-	perTurnTokenManager := NewTokenBankUniversalManager()
 
 	// Finish
 	return &PlayerBoard{
@@ -153,7 +157,6 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 		stacks:              stacks,
 		specialTokenManager: specialTokenManager,
 		techTokenManager:    techTokenManager,
-		perTurnTokenManager: perTurnTokenManager,
 	}
 }
 
@@ -254,22 +257,6 @@ func (p *PlayerBoard) getUrbanCount(stack int) int {
 
 func (p *PlayerBoard) getTempMilitaryResource() int {
 	return p.specialTokenManager.getTokenCount(MILITARY_RESOURCE_TEMP, TOKEN_BLUE)
-}
-
-func (p *PlayerBoard) perTurnSpecialAbilityUsed(sa int) bool {
-	return p.perTurnTokenManager.getTokenCount(sa, TOKEN_DEFAULT) > 0
-}
-
-func (p *PlayerBoard) markPerTurnSpecialAbility(sa int) {
-	p.perTurnTokenManager.processRequest(&SetTokenRequest{
-		bankId:     sa,
-		tokenType:  TOKEN_DEFAULT,
-		tokenCount: 1,
-	})
-}
-
-func (p *PlayerBoard) clearPerTurnSpecialAbility() {
-	p.perTurnTokenManager.processRequest(&ClearAllTokensRequest{})
 }
 
 func (p *PlayerBoard) getResourceCorruption() int {
@@ -510,18 +497,6 @@ func (p *PlayerBoard) realignWhiteRedTokens() {
 	}
 }
 
-func (p *PlayerBoard) clearupTurn() {
-	csm := p.game.cardStackManager
-	p.realignWhiteRedTokens()
-	for _, card := range csm.cardStacks[p.stacks[HAND]] {
-		p.game.cardTokenManager.processRequest(&ClearTokenRequest{
-			bankId:    card.id,
-			tokenType: TOKEN_ACTION_CARD_THIS_TURN,
-		})
-	}
-	p.clearPerTurnSpecialAbility()
-}
-
 func (p *PlayerBoard) gainCulture(gain int) {
 	p.specialTokenManager.processRequest(&AddTokenRequest{
 		bankId:     CULTURE_COUNTER,
@@ -736,21 +711,12 @@ func (p *PlayerBoard) calcTechInc() int {
 
 func (p *PlayerBoard) calcPower() int {
 	power := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-		ret := school.productionPower
-		if p.specialAbilityAvailable(SA_GREAT_WALL) &&
-			(school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY)) {
-			ret += 1
+		if p.specialAbilityAvailable(SA_GREAT_WALL) && (school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
+			school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY)) {
+			return school.productionPower + 1
+		} else {
+			return school.productionPower
 		}
-
-		if p.specialAbilityAvailable(SA_ALEXANDER_THE_GREAT) &&
-			(school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE)) {
-			ret += 1
-		}
-		return ret
 	}, false)
 
 	if p.specialAbilityAvailable(SA_NAPOLEON_BONAPARTE) {
@@ -962,15 +928,6 @@ func (p *PlayerBoard) takeCardFromWheel(index int) {
 			p.specialTokenManager.processRequest(&AddTokenRequest{
 				bankId:     LEADER_A_TAKEN + school.age,
 				tokenType:  TOKEN_DEFAULT,
-				tokenCount: 1,
-			})
-		}
-
-		// Mark action card
-		if school.hasType(CARDTYPE_ACTION) {
-			p.game.cardTokenManager.processRequest(&SetTokenRequest{
-				bankId:     card.id,
-				tokenType:  TOKEN_ACTION_CARD_THIS_TURN,
 				tokenCount: 1,
 			})
 		}
@@ -1255,6 +1212,7 @@ func (p *PlayerBoard) produceCrop() {
 		if amount > p.getFreeBlueTokens() {
 			amount = p.getFreeBlueTokens()
 		}
+		fmt.Println(p.getFreeYellowTokens())
 		if amount == 0 {
 			return
 		}
@@ -1263,11 +1221,13 @@ func (p *PlayerBoard) produceCrop() {
 			tokenType:  TOKEN_BLUE,
 			tokenCount: amount,
 		})
+		fmt.Println(p.getFreeYellowTokens())
 		p.game.cardTokenManager.processRequest(&AddTokenRequest{
 			bankId:     card.id,
 			tokenType:  TOKEN_BLUE,
 			tokenCount: amount,
 		})
+		fmt.Println(p.getFreeYellowTokens())
 	}
 }
 
@@ -1497,9 +1457,6 @@ func (p *PlayerBoard) canPlayCard(card Card, attachment interface{}) bool {
 		return p.getUsableWhiteTokens() >= 1 && p.getTechTotal() >= school.tech
 	} else if school.hasType(CARDTYPE_ACTION) {
 		if p.getUsableWhiteTokens() >= 1 {
-			if p.game.cardTokenManager.getTokenCount(card.id, TOKEN_ACTION_CARD_THIS_TURN) > 0 {
-				return false
-			}
 			if school.hasType(CARDTYPE_ACTION_BREAKTHROUGH) {
 				return p.canPlayBreakthrough(card, attachmentAsInt(attachment, -1))
 			} else if school.hasType(CARDTYPE_ACTION_CULTURAL_HERITAGE) {
@@ -2147,7 +2104,7 @@ func (p *PlayerBoard) canUpgrade(stack, index1, index2, reducedCost int) bool {
 
 	if index1 < 0 || index1 >= csm.getStackSize(p.stacks[stack]) ||
 		index2 < 0 || index2 >= csm.getStackSize(p.stacks[stack]) {
-		fmt.Println("canUpgrade invalid card index")
+		fmt.Println("canBuild invalid card index")
 		return false
 	}
 
@@ -2327,34 +2284,6 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 			}, false))
 		}
 	}
-}
 
-func (p *PlayerBoard) canUseCivilSpecialAbility(sa int, attachment interface{}) bool {
-	switch sa {
-	case SA_OCEAN_LINER_SERVICE:
-		return p.getFreeYellowTokens() > 0 &&
-			!p.perTurnSpecialAbilityUsed(SA_OCEAN_LINER_SERVICE)
-	case SA_HAMMURABI:
-		return p.getUsableRedTokens() >= 1 &&
-			!p.perTurnSpecialAbilityUsed(SA_HAMMURABI)
-	}
-	return false
-}
-
-func (p *PlayerBoard) useCivilSpecialAbility(sa int, attachment interface{}) {
-	switch sa {
-	case SA_OCEAN_LINER_SERVICE:
-		p.specialTokenManager.processRequest(&MoveTokenRequest{
-			sourceBankId: FREE_YELLOW,
-			targetBankId: FREE_WORKER,
-			tokenType:    TOKEN_YELLOW,
-			tokenCount:   1,
-		})
-		p.markPerTurnSpecialAbility(SA_OCEAN_LINER_SERVICE)
-	case SA_HAMMURABI:
-		p.removeUsableRedTokens(1)
-		p.gainTempWhiteTokens(1)
-		p.markPerTurnSpecialAbility(SA_HAMMURABI)
-	}
 }
 */

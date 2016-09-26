@@ -225,38 +225,33 @@ func paintSpecialTechs(player *PlayerBoard) ([][]rune, int) {
 		" SPEC TECHS:                                    ",
 	}
 	result := toRunes(backGround)
-	count := 0
-	for _, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CIVIL]] {
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CIVIL]] {
 		need = true
 		school := player.game.cardSchools[c.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
-				school.schoolName}), 16, 1+count)
-		count++
+				school.schoolName}), 16, 1+i)
 	}
-	for _, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_WARFARE]] {
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_WARFARE]] {
 		need = true
 		school := player.game.cardSchools[c.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
-				school.schoolName}), 16, 1+count)
-		count++
+				school.schoolName}), 16, 1+i)
 	}
-	for _, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_COLONIZE]] {
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_COLONIZE]] {
 		need = true
 		school := player.game.cardSchools[c.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
-				school.schoolName}), 16, 1+count)
-		count++
+				school.schoolName}), 16, 1+i)
 	}
-	for _, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CONSTRUCTION]] {
+	for i, c := range csm.cardStacks[player.stacks[TECH_SPECIAL_CONSTRUCTION]] {
 		need = true
 		school := player.game.cardSchools[c.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(school.schoolId) + "] " +
-				school.schoolName}), 16, 1+count)
-		count++
+				school.schoolName}), 16, 1+i)
 	}
 	if need {
 		return result, len(result)
@@ -524,7 +519,6 @@ func PrintGame(game *TtaGame) {
 
 func main() {
 	game := NewTta()
-	game.players[0].refillWhiteRedTokens()
 	PrintGame(game)
 	for {
 		bio := bufio.NewReader(os.Stdin)

@@ -150,10 +150,8 @@ func parseCommand(game *TtaGame, command string) {
 			PrintPublicArea(game)
 		}
 	case "end", "e":
-		fmt.Println("OK")
 		game.players[0].doProductionPhase()
-		game.players[0].clearupTurn()
-		game.weedOut(3)
+		game.weedOut(2)
 		game.refillWheels()
 	case "fetch", "f":
 		if len(splitted) < 2 {
@@ -165,7 +163,6 @@ func parseCommand(game *TtaGame, command string) {
 				!game.players[0].canTakeCardFromWheel(index) {
 				fmt.Println("Invliad fetch command ", err)
 			} else {
-				fmt.Println("OK")
 				game.players[0].takeCardFromWheel(index)
 			}
 		}
@@ -182,7 +179,6 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("Invliad play command ", err)
 				fmt.Println("Invliad play command ", game.players[0].canPlayHand(index, att))
 			} else {
-				fmt.Println("OK")
 				game.players[0].playHand(index, att)
 			}
 		}
@@ -205,7 +201,6 @@ func parseCommand(game *TtaGame, command string) {
 			if !ok || !game.players[0].canBuild(stack, index, 0) {
 				fmt.Println("Invalid build command")
 			} else {
-				fmt.Println("OK")
 				game.players[0].build(stack, index, 0)
 			}
 		}
@@ -240,7 +235,7 @@ func parseCommand(game *TtaGame, command string) {
 			if !game.players[0].canUpgrade(stack1, index1, index2, 0) {
 				fmt.Println("Invalid build command")
 			} else {
-				fmt.Println("OK")
+				fmt.Println("upgrade")
 				game.players[0].upgrade(stack1, index1, index2, 0)
 			}
 		}
@@ -257,34 +252,8 @@ func parseCommand(game *TtaGame, command string) {
 		if !game.players[0].canBuildWonder(step, 0) {
 			fmt.Println("Invalid buildwonder command")
 		} else {
-			fmt.Println("OK")
+			fmt.Println("upgrade")
 			game.players[0].buildWonder(step, 0)
 		}
-	case "specialability", "sa":
-		if len(splitted) < 2 {
-			fmt.Println("Unknown command")
-		} else {
-			sa, err := strconv.Atoi(splitted[1])
-
-			att := toAttachment(game, splitted)
-
-			// Ugly, temporary code
-			if sa == 74 {
-				sa = 14
-			} else if sa == 66 {
-				sa = 5
-			}
-
-			if err != nil ||
-				!game.players[0].canUseCivilSpecialAbility(sa, att) {
-				fmt.Println("Invliad specialability command ", err)
-				fmt.Println("Invliad specialability command ", game.players[0].canPlayHand(sa, att))
-			} else {
-				fmt.Println("OK")
-				game.players[0].useCivilSpecialAbility(sa, att)
-			}
-		}
-	default:
-		fmt.Println("Unknown command")
 	}
 }

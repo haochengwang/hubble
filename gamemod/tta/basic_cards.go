@@ -303,8 +303,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Warriors",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_INFANTRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_INFANTRY},
 		buildCost:       2,
 		productionPower: 1,
 		cardCounts:      []int{2, 3, 4},
@@ -314,8 +314,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Swordmen",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_INFANTRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_INFANTRY},
 		tech:            4,
 		buildCost:       3,
 		productionPower: 2,
@@ -326,8 +326,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Riflemen",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_INFANTRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_INFANTRY},
 		tech:            6,
 		buildCost:       5,
 		productionPower: 3,
@@ -338,8 +338,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "M. Infa.",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_INFANTRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_INFANTRY},
 		tech:            10,
 		buildCost:       7,
 		productionPower: 5,
@@ -352,8 +352,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Knights",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_CAVALRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_CAVALRY},
 		tech:            5,
 		buildCost:       3,
 		productionPower: 2,
@@ -364,8 +364,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Caval.",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_CAVALRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_CAVALRY},
 		tech:            6,
 		buildCost:       5,
 		productionPower: 3,
@@ -376,8 +376,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Tanks",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_CAVALRY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_CAVALRY},
 		tech:            9,
 		buildCost:       7,
 		productionPower: 5,
@@ -390,8 +390,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Cannon",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_ARTILLERY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_ARTILLERY},
 		tech:            6,
 		buildCost:       5,
 		productionPower: 3,
@@ -402,8 +402,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Rockets",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_ARTILLERY},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_ARTILLERY},
 		tech:            8,
 		buildCost:       7,
 		productionPower: 5,
@@ -416,8 +416,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		shortName:  "Air F.",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_TECH,
-			CARDTYPE_TECH_MILLI,
-			CARDTYPE_TECH_MILLI_AIRFORCE},
+			CARDTYPE_TECH_MILI,
+			CARDTYPE_TECH_MILI_AIRFORCE},
 		tech:            12,
 		buildCost:       7,
 		productionPower: 5,
@@ -1305,6 +1305,312 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_WAVE_OF_NATIONALISM},
 		cardCounts: []int{1, 1, 1},
+	})
+
+	// Defence / Colonise
+	schools = append(schools, &CardSchool{
+		schoolName: "Def+2 / Col+1",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_DEFCOL},
+		cardCounts: []int{6, 6, 6},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Def+4 / Col+2",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_DEFCOL},
+		cardCounts: []int{6, 6, 6},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Def+6 / Col+3",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_DEFCOL},
+		cardCounts: []int{6, 6, 6},
+	})
+
+	// Aggressions
+	schools = append(schools, &CardSchool{
+		schoolName:     "Enslave",
+		age:            1,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 2,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Plunder - Age I",
+		age:            1,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 1,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Raid - Age I",
+		age:            1,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 1,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Annex",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 2,
+		cardCounts:     []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Infiltrate",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 2,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Plunder - Age II",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 1,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Raid - Age II",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 2,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Spy",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 1,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Armed Intervention",
+		age:            3,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 2,
+		cardCounts:     []int{4, 4, 4},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Plunder - Age III",
+		age:            3,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 1,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "Raid - Age III",
+		age:            3,
+		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
+		miliActionCost: 3,
+		cardCounts:     []int{2, 2, 2},
+	})
+
+	// Wars
+	schools = append(schools, &CardSchool{
+		schoolName:     "War over Technology",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_WAR},
+		miliActionCost: 2,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "War over Territory",
+		age:            2,
+		cardTypes:      []CardType{CARDTYPE_WAR},
+		miliActionCost: 2,
+		cardCounts:     []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:     "War over Culture",
+		age:            3,
+		cardTypes:      []CardType{CARDTYPE_WAR},
+		miliActionCost: 3,
+		cardCounts:     []int{6, 6, 6},
+	})
+
+	// Pacts
+	schools = append(schools, &CardSchool{
+		schoolName: "Open Borders Agreement",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Trade Routes Agreement",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Acceptance of Supremacy",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "International Trade Agreement",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Promise of Military Protection",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Scientific Cooperation",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "International Tourism",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Loss of Sovereignty",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Military Alliance",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Peace Treaty",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_PACT},
+		cardCounts: []int{1, 1, 1},
+	})
+
+	// Tactics
+	schools = append(schools, &CardSchool{
+		schoolName:            "Fighting Band",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       1,
+		productionPowerLesser: 1,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Heavy Cavalry",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       4,
+		productionPowerLesser: 4,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Legion",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       2,
+		productionPowerLesser: 2,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Medieval Army",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       2,
+		productionPowerLesser: 2,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Phalanx",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       3,
+		productionPowerLesser: 3,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Classic Army",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       8,
+		productionPowerLesser: 4,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Conquistadors",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       5,
+		productionPowerLesser: 3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Defensive Army",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       6,
+		productionPowerLesser: 3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Fortifications",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       5,
+		productionPowerLesser: 3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Mobile Army",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       5,
+		productionPowerLesser: 3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Napoleonic Army",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       7,
+		productionPowerLesser: 4,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Entrenchments",
+		age:                   3,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       9,
+		productionPowerLesser: 5,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Mechanized Army",
+		age:                   3,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       10,
+		productionPowerLesser: 5,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Modern Army",
+		age:                   3,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       13,
+		productionPowerLesser: 7,
+		cardCounts:            []int{2, 2, 2},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Shock Troops",
+		age:                   3,
+		cardTypes:             []CardType{CARDTYPE_TACTIC},
+		productionPower:       11,
+		productionPowerLesser: 6,
+		cardCounts:            []int{1, 1, 1},
 	})
 
 	result = make(map[int]*CardSchool)

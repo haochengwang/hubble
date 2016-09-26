@@ -19,11 +19,11 @@ const (
 	CARDTYPE_TECH_URBAN_ARENA          = 15
 	CARDTYPE_TECH_URBAN_THEATER        = 16
 	CARDTYPE_TECH_URBAN_LIBRARY        = 17
-	CARDTYPE_TECH_MILLI                = 18
-	CARDTYPE_TECH_MILLI_INFANTRY       = 19
-	CARDTYPE_TECH_MILLI_CAVALRY        = 20
-	CARDTYPE_TECH_MILLI_ARTILLERY      = 21
-	CARDTYPE_TECH_MILLI_AIRFORCE       = 22
+	CARDTYPE_TECH_MILI                 = 18
+	CARDTYPE_TECH_MILI_INFANTRY        = 19
+	CARDTYPE_TECH_MILI_CAVALRY         = 20
+	CARDTYPE_TECH_MILI_ARTILLERY       = 21
+	CARDTYPE_TECH_MILI_AIRFORCE        = 22
 	CARDTYPE_TECH_GOVERNMENT           = 23
 
 	CARDTYPE_ACTION                     = 24
@@ -44,7 +44,7 @@ const (
 
 	CARDTYPE_DEFCOL     = 101
 	CARDTYPE_TACTIC     = 102
-	CARDTYPE_COLONY     = 103
+	CARDTYPE_TERRITORY  = 103
 	CARDTYPE_EVENT      = 104
 	CARDTYPE_PACT       = 105
 	CARDTYPE_AGGRESSION = 106
@@ -111,12 +111,15 @@ type CardSchool struct {
 	productionTech          int
 	productionHappiness     int
 	productionPower         int
+	productionPowerLesser   int // For tactics only
 	productionColonizePower int
 	productionUrbanLimit    int
 	productionWhiteToken    int // White tokens
 	productionRedToken      int // Red tokens
 	productionYellowToken   int // Yellow tokens
 	productionBlueToken     int // Blue tokens
+
+	miliActionCost int // For aggressions and wars
 
 	cardCounts []int
 }
@@ -137,6 +140,13 @@ func (s *CardSchool) hasSpecialAbility(specialAbility int) bool {
 		}
 	}
 	return false
+}
+
+func (s *CardSchool) isCivilCard() bool {
+	return s.hasType(CARDTYPE_LEADER) ||
+		s.hasType(CARDTYPE_WONDER) ||
+		s.hasType(CARDTYPE_TECH) ||
+		s.hasType(CARDTYPE_ACTION)
 }
 
 type Card struct {

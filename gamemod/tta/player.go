@@ -738,16 +738,16 @@ func (p *PlayerBoard) calcPower() int {
 	power := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
 		ret := school.productionPower
 		if p.specialAbilityAvailable(SA_GREAT_WALL) &&
-			(school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY)) {
+			(school.hasType(CARDTYPE_TECH_MILI_INFANTRY) ||
+				school.hasType(CARDTYPE_TECH_MILI_ARTILLERY)) {
 			ret += 1
 		}
 
 		if p.specialAbilityAvailable(SA_ALEXANDER_THE_GREAT) &&
-			(school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) ||
-				school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE)) {
+			(school.hasType(CARDTYPE_TECH_MILI_INFANTRY) ||
+				school.hasType(CARDTYPE_TECH_MILI_CAVALRY) ||
+				school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) ||
+				school.hasType(CARDTYPE_TECH_MILI_AIRFORCE)) {
 			ret += 1
 		}
 		return ret
@@ -755,7 +755,7 @@ func (p *PlayerBoard) calcPower() int {
 
 	if p.specialAbilityAvailable(SA_NAPOLEON_BONAPARTE) {
 		infantry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-			if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) {
+			if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
 				return 1
 			} else {
 				return 0
@@ -766,7 +766,7 @@ func (p *PlayerBoard) calcPower() int {
 		}
 
 		cavalry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-			if school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) {
+			if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
 				return 1
 			} else {
 				return 0
@@ -777,7 +777,7 @@ func (p *PlayerBoard) calcPower() int {
 		}
 
 		artilery := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-			if school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
+			if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
 				return 1
 			} else {
 				return 0
@@ -788,7 +788,7 @@ func (p *PlayerBoard) calcPower() int {
 		}
 
 		airforce := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-			if school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE) {
+			if school.hasType(CARDTYPE_TECH_MILI_AIRFORCE) {
 				return 1
 			} else {
 				return 0
@@ -1818,13 +1818,13 @@ func (p *PlayerBoard) playCard(card Card, index int, attachment interface{}) {
 			p.playStructureTechCard(card, index, FARM)
 		} else if school.hasType(CARDTYPE_TECH_MINE) {
 			p.playStructureTechCard(card, index, MINE)
-		} else if school.hasType(CARDTYPE_TECH_MILLI_INFANTRY) {
+		} else if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
 			p.playStructureTechCard(card, index, MILI_INFANTRY)
-		} else if school.hasType(CARDTYPE_TECH_MILLI_CAVALRY) {
+		} else if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
 			p.playStructureTechCard(card, index, MILI_CAVALRY)
-		} else if school.hasType(CARDTYPE_TECH_MILLI_ARTILLERY) {
+		} else if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
 			p.playStructureTechCard(card, index, MILI_ARTILERY)
-		} else if school.hasType(CARDTYPE_TECH_MILLI_AIRFORCE) {
+		} else if school.hasType(CARDTYPE_TECH_MILI_AIRFORCE) {
 			p.playStructureTechCard(card, index, MILI_AIRFORCE)
 		} else if school.hasType(CARDTYPE_TECH_URBAN_TEMPLE) {
 			p.playStructureTechCard(card, index, URBAN_TEMPLE)
@@ -2316,7 +2316,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 			}, false))
 		} else if school.hasSpecialAbility(SA_FAST_FOOD_CHAINS) {
 			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
-				if school.hasType(CARDTYPE_TECH_MILLI) ||
+				if school.hasType(CARDTYPE_TECH_MILI) ||
 					school.hasType(CARDTYPE_TECH_URBAN) {
 					return 1
 				} else if school.hasType(CARDTYPE_TECH_FARM) ||

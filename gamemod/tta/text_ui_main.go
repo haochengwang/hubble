@@ -524,7 +524,7 @@ func PrintGame(game *TtaGame) {
 
 func main() {
 	options := &TtaGameOptions{
-		playerCount: 1,
+		PlayerCount: 1,
 	}
 	game := NewTta(options)
 	game.players[0].refillWhiteRedTokens()

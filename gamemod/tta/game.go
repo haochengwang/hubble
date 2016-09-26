@@ -1,14 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 )
 
 type UserStackId int
 
 type TtaGameOptions struct {
-	playerCount  int
-	loveAndPeace bool
+	PlayerCount  int
+	LoveAndPeace bool
 }
 
 type PendingActionType int
@@ -19,8 +20,28 @@ const (
 )
 
 type PendingAction struct {
-	actionType PendingActionType
-	attachment interface{}
+	PendingActionType PendingActionType
+}
+
+type MoveType int
+const (
+	CIVIL_FETCH_CARD MoveType = iota
+	CIVIL_PLAY_CARD
+	CIVIL_INC_POP
+	CIVIL_BUILD
+	CIVIL_BUILD_WONDER
+	CIVIL_UPGRADE
+	CIVIL_SPECIAL_ABILITY
+	CIVIL_END
+	CHOOSE_YELLOW
+	CHOOSE_BLUE
+)
+
+type Move struct {
+	FromPlayer int
+	MoveType   MoveType
+
+	Data []int
 }
 
 type TtaGame struct {
@@ -34,10 +55,14 @@ type TtaGame struct {
 	greatWheel []int // 13 stacks
 	ageStacks  []int // 4 stacks by age
 	players    []*PlayerBoard
+
+	// Pending action
+	CurrentPlayer int
+	PendingAction PendingAction
 }
 
 func NewTta(options *TtaGameOptions) (result *TtaGame) {
-	if options.playerCount < 1 || options.playerCount > 4 {
+	if options.PlayerCount < 1 || options.PlayerCount > 4 {
 		return nil
 	}
 	game := &TtaGame{
@@ -49,7 +74,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		players:            make([]*PlayerBoard, 2),
 	}
 	game.cardSchools = InitBasicCardSchools()
-	for i := 0; i < options.playerCount; i++ {
+	for i := 0; i < options.PlayerCount; i++ {
 		game.players[i] = initPlayerBoard(game)
 	}
 
@@ -82,7 +107,7 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			school.schoolId == 35 {
 			continue
 		}
-		if options.playerCount == 1 {  // Solo test mode
+		if options.PlayerCount == 1 {  // Solo test mode
 			for i := 0; i < school.cardCounts[0]; i++ {
 				csm.processRequest(&AddCardToTopRequest{
 					schoolId: id,
@@ -90,7 +115,7 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 				})
 			}
 		} else {
-			for i := 0; i < school.cardCounts[options.playerCount - 2]; i++ {
+			for i := 0; i < school.cardCounts[options.PlayerCount - 2]; i++ {
 				csm.processRequest(&AddCardToTopRequest{
 					schoolId: id,
 					stackId:  g.ageStacks[school.age],
@@ -197,5 +222,99 @@ func (g *TtaGame) weedOut(position int) {
 				},
 			})
 		}
+	}
+}
+
+func (g *TtaGame) processCivilMove(move *Move) (err error) {
+	if move.FromPlayer != g.CurrentPlayer {
+		return fmt.Errorf("Not current player.")
+	}
+	p := g.players[g.CurrentPlayer]
+	switch move.MoveType {
+	case CIVIL_FETCH_CARD:
+		if len(move.Data) != 1 {
+			return fmt.Errorf("Invalid fetch command.")
+		}
+		index := move.Data[0]
+		if !p.canTakeCardFromWheel(index) {
+			return fmt.Errorf("Invalid fetch command.")
+		}
+		p.takeCardFromWheel(index)
+	case CIVIL_PLAY_CARD:
+		if len(move.Data) < 1 {
+			return fmt.Errorf("Invalid play command.")
+		}
+		index := move.Data[0]
+		var attachment interface{}
+		if len(move.Data) > 1 {
+			attachment = move.Data[1:]
+		} else {
+			attachment = nil
+		}
+		if !p.canPlayHand(index, attachment) {
+			return fmt.Errorf("Invalid play command")
+		}
+		p.playHand(index, attachment)
+	case CIVIL_INC_POP:
+		if !p.canIncreasePop() {
+			return fmt.Errorf("Invalid incpop command")
+		}
+		p.increasePop()
+	case CIVIL_BUILD:
+		if len(move.Data) < 2 {
+			return fmt.Errorf("Invalid build command.")
+		}
+		stack := move.Data[0]
+		index := move.Data[0]
+		if !p.canBuild(stack, index, 0) {
+			return fmt.Errorf("Invalid build command")
+		}
+		p.build(stack, index, 0)
+	case CIVIL_BUILD_WONDER:
+		if len(move.Data) < 1 {
+			return fmt.Errorf("Invalid buildwonder command.")
+		}
+		step := move.Data[0]
+		if !p.canBuildWonder(step, 0) {
+			return fmt.Errorf("Invalid buildwonder command")
+		}
+		p.buildWonder(step, 0)
+	case CIVIL_UPGRADE:
+		if len(move.Data) < 3 {
+			return fmt.Errorf("Invalid upgrade command.")
+		}
+		stack := move.Data[0]
+		index1 := move.Data[1]
+		index2 := move.Data[2]
+		if !p.canUpgrade(stack, index1, index2, 0) {
+			return fmt.Errorf("Invalid upgrade command")
+		}
+		p.upgrade(stack, index1, index2, 0)
+	case CIVIL_SPECIAL_ABILITY:
+		if len(move.Data) < 1 {
+			return fmt.Errorf("Invalid specialability command.")
+		}
+		sa := move.Data[0]
+		var attachment interface{}
+		if len(move.Data) > 1 {
+			attachment = move.Data[1:]
+		} else {
+			attachment = nil
+		}
+		if !p.canUseCivilSpecialAbility(sa, attachment) {
+			return fmt.Errorf("Invalid specialability command")
+		}
+		p.useCivilSpecialAbility(sa, attachment)
+	case CIVIL_END:
+	}
+	return nil
+}
+
+func (g *TtaGame) ProcessMove(move *Move) (err error) {
+	switch g.PendingAction.PendingActionType {
+	case CIVIL:
+		return g.processCivilMove(move)
+	default:
+		return fmt.Errorf("Invalid PendingAction")
 	}
 }

@@ -139,7 +139,7 @@ func (s *CardSchool) hasSpecialAbility(specialAbility int) bool {
 	return false
 }
 
-/*type Card struct {
+type Card struct {
 	id       int
 	schoolId int
 }
@@ -299,4 +299,4 @@ func (m *CardStackUniversalManager) getStackSize(stackId int) int {
 		return len(stack)
 	}
 	return -1
-}*/
+}

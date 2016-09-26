@@ -1,4 +1,4 @@
-package gamemod
+package main
 
 import (
 	"fmt"

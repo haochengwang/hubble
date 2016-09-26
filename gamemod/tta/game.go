@@ -6,6 +6,23 @@ import (
 
 type UserStackId int
 
+type TtaGameOptions struct {
+	playerCount  int
+	loveAndPeace bool
+}
+
+type PendingActionType int
+const (
+	CIVIL PendingActionType = 1
+	REMOVE_YELLOW           = 2
+	REMOVE_BLUE             = 3
+)
+
+type PendingAction struct {
+	actionType PendingActionType
+	attachment interface{}
+}
+
 type TtaGame struct {
 	cardStackManager   *CardStackUniversalManager
 	globalTokenManager *TokenBankUniversalManager
@@ -19,7 +36,10 @@ type TtaGame struct {
 	players    []*PlayerBoard
 }
 
-func NewTta() (result *TtaGame) {
+func NewTta(options *TtaGameOptions) (result *TtaGame) {
+	if options.playerCount < 1 || options.playerCount > 4 {
+		return nil
+	}
 	game := &TtaGame{
 		cardStackManager:   NewCardStackUniversalManager(),
 		globalTokenManager: NewTokenBankUniversalManager(),
@@ -29,7 +49,7 @@ func NewTta() (result *TtaGame) {
 		players:            make([]*PlayerBoard, 2),
 	}
 	game.cardSchools = InitBasicCardSchools()
-	for i := 0; i < 2; i++ {
+	for i := 0; i < options.playerCount; i++ {
 		game.players[i] = initPlayerBoard(game)
 	}
 
@@ -40,7 +60,7 @@ func NewTta() (result *TtaGame) {
 		game.ageStacks[i] = game.cardStackManager.newStack()
 	}
 
-	game.initBasicCards()
+	game.initBasicCards(options)
 	game.refillWheels()
 	game.banishAgeACards()
 	return game
@@ -50,7 +70,7 @@ func (g *TtaGame) checkDecay() {
 
 }
 
-func (g *TtaGame) initBasicCards() {
+func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 	// Fill all the civil cards
 	csm := g.cardStackManager
 	for id, school := range InitBasicCardSchools() {
@@ -62,11 +82,20 @@ func (g *TtaGame) initBasicCards() {
 			school.schoolId == 35 {
 			continue
 		}
-		for i := 0; i < school.cardCounts[0]; i++ {
-			csm.processRequest(&AddCardToTopRequest{
-				schoolId: id,
-				stackId:  g.ageStacks[school.age],
-			})
+		if options.playerCount == 1 {  // Solo test mode
+			for i := 0; i < school.cardCounts[0]; i++ {
+				csm.processRequest(&AddCardToTopRequest{
+					schoolId: id,
+					stackId:  g.ageStacks[school.age],
+				})
+			}
+		} else {
+			for i := 0; i < school.cardCounts[options.playerCount - 2]; i++ {
+				csm.processRequest(&AddCardToTopRequest{
+					schoolId: id,
+					stackId:  g.ageStacks[school.age],
+				})
+			}
 		}
 	}
 

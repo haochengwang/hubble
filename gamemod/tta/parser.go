@@ -153,6 +153,7 @@ func parseCommand(game *TtaGame, command string) {
 		fmt.Println("OK")
 		game.players[0].doProductionPhase()
 		game.players[0].clearupTurn()
+		game.players[0].drawMiliCards(2)
 		game.weedOut(3)
 		game.refillWheels()
 	case "fetch", "f":

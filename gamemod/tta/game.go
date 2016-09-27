@@ -15,12 +15,14 @@ type TtaGameOptions struct {
 type PendingActionType int
 const (
 	CIVIL PendingActionType = 1
-	REMOVE_YELLOW           = 2
-	REMOVE_BLUE             = 3
+	DISCARD_MILITARY        = 2
+	REMOVE_YELLOW           = 3
+	REMOVE_BLUE             = 4
 )
 
 type PendingAction struct {
-	PendingActionType PendingActionType
+	Type PendingActionType
+	Data []int
 }
 
 type MoveType int
@@ -44,6 +46,18 @@ type Move struct {
 	Data []int
 }
 
+type TtaActionType int
+const (
+	ACTION_POLITICAL TtaActionType = iota
+	ACTION_CIVIL
+	ACTION_DECAY_AND_PRODUCE
+	ACTION_DISCARD_MILITARY
+	ACTION_DRAW_MILITARY
+)
+
+type TtaAction struct {
+}
+
 type TtaGame struct {
 	cardStackManager   *CardStackUniversalManager
 	globalTokenManager *TokenBankUniversalManager
@@ -52,12 +66,18 @@ type TtaGame struct {
 	// All card schools
 	cardSchools map[int]*CardSchool
 
-	greatWheel []int // 13 stacks
-	ageStacks  []int // 4 stacks by age
-	players    []*PlayerBoard
+	greatWheel       []int // 13 stacks
+	ageStacks        []int // 4 stacks by age
+	miliDecks        []int // 4 stacks by age, first element is zero
+	miliDiscardDecks []int
+	futureEventsDeck int
+	nowEventsDeck    int
+	pastEventsDeck   int
+	players          []*PlayerBoard
 
 	// Pending action
 	CurrentPlayer int
+	ActionStack   []*TtaAction
 	PendingAction PendingAction
 }
 
@@ -71,6 +91,8 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		cardTokenManager:   NewTokenBankUniversalManager(),
 		greatWheel:         make([]int, 13),
 		ageStacks:          make([]int, 4),
+		miliDecks:          make([]int, 4),
+		miliDiscardDecks:   make([]int, 4),
 		players:            make([]*PlayerBoard, 2),
 	}
 	game.cardSchools = InitBasicCardSchools()
@@ -83,7 +105,12 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	}
 	for i := 0; i < 4; i++ {
 		game.ageStacks[i] = game.cardStackManager.newStack()
+		game.miliDecks[i] = game.cardStackManager.newStack()
+		game.miliDiscardDecks[i] = game.cardStackManager.newStack()
 	}
+	game.futureEventsDeck = game.cardStackManager.newStack()
+	game.nowEventsDeck = game.cardStackManager.newStack()
+	game.pastEventsDeck = game.cardStackManager.newStack()
 
 	game.initBasicCards(options)
 	game.refillWheels()
@@ -107,18 +134,22 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			school.schoolId == 35 {
 			continue
 		}
+		var cardCountIdx int
 		if options.PlayerCount == 1 {  // Solo test mode
-			for i := 0; i < school.cardCounts[0]; i++ {
+			cardCountIdx = 0
+		} else {
+			cardCountIdx = options.PlayerCount - 2
+		}
+		for i := 0; i < school.cardCounts[cardCountIdx]; i++ {
+			if school.isCivilCard() {
 				csm.processRequest(&AddCardToTopRequest{
 					schoolId: id,
 					stackId:  g.ageStacks[school.age],
 				})
-			}
-		} else {
-			for i := 0; i < school.cardCounts[options.PlayerCount - 2]; i++ {
+			} else {
 				csm.processRequest(&AddCardToTopRequest{
 					schoolId: id,
-					stackId:  g.ageStacks[school.age],
+					stackId:  g.miliDecks[school.age],
 				})
 			}
 		}
@@ -135,6 +166,23 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 				},
 				targetPosition: CardPosition{
 					stackId:  g.ageStacks[i],
+					position: randomPerm[j],
+				},
+			})
+		}
+	}
+
+	for i := 0; i <= 3; i++ {
+		cardCount := csm.getStackSize(g.miliDecks[i])
+		randomPerm := rand.Perm(cardCount)
+		for j := 0; j < cardCount; j++ {
+			csm.processRequest(&SwapCardRequest{
+				sourcePosition: CardPosition{
+					stackId:  g.miliDecks[i],
+					position: j,
+				},
+				targetPosition: CardPosition{
+					stackId:  g.miliDecks[i],
 					position: randomPerm[j],
 				},
 			})
@@ -310,10 +358,16 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 	return nil
 }
 
+func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {
+	return nil
+}
+
 func (g *TtaGame) ProcessMove(move *Move) (err error) {
-	switch g.PendingAction.PendingActionType {
+	switch g.PendingAction.Type {
 	case CIVIL:
 		return g.processCivilMove(move)
+	case DISCARD_MILITARY:
+		return g.processDiscardMilitaryMove(move)
 	default:
 		return fmt.Errorf("Invalid PendingAction")
 	}

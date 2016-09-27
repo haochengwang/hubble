@@ -25,6 +25,7 @@ const (
 	TECH_SPECIAL_COLONIZE
 	TECH_SPECIAL_CONSTRUCTION
 	HAND
+	MILI_HAND
 	USER_STACK_SIZE
 )
 
@@ -2355,5 +2356,21 @@ func (p *PlayerBoard) useCivilSpecialAbility(sa int, attachment interface{}) {
 		p.removeUsableRedTokens(1)
 		p.gainTempWhiteTokens(1)
 		p.markPerTurnSpecialAbility(SA_HAMMURABI)
+	}
+}
+
+func (p* PlayerBoard) drawMiliCards(count int) {
+	csm := p.game.cardStackManager
+	for i := 0; i < count; i++ {
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.game.miliDecks[1],
+				position: 0,
+			},
+			targetPosition: CardPosition{
+				stackId:  p.stacks[MILI_HAND],
+				position: 0,
+			},
+		})
 	}
 }

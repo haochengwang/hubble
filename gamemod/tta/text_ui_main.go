@@ -330,6 +330,13 @@ func paintHands(player *PlayerBoard) ([][]rune, int) {
 			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
 				handSchool.schoolName}), 15, 1+i)
 	}
+	for i, handCard := range csm.cardStacks[player.stacks[MILI_HAND]] {
+		need = true
+		handSchool := player.game.cardSchools[handCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
+				handSchool.schoolName}), 15, 1+i)
+	}
 	if need {
 		return result, len(result)
 	} else {

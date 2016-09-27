@@ -50,12 +50,20 @@ type TtaActionType int
 const (
 	ACTION_POLITICAL TtaActionType = iota
 	ACTION_CIVIL
+	ACTION_EVENT
+	ACTION_COLONISE
+	ACTION_AGGRESSION
+	ACTION_WAR
+	ACTION_PACT
+	ACTION_FETCH_CARD  // Only for round 1
 	ACTION_DECAY_AND_PRODUCE
 	ACTION_DISCARD_MILITARY
 	ACTION_DRAW_MILITARY
 )
 
 type TtaAction struct {
+	Type       TtaActionType
+	Attachment interface{}
 }
 
 type TtaGame struct {
@@ -77,8 +85,8 @@ type TtaGame struct {
 
 	// Pending action
 	CurrentPlayer int
-	ActionStack   []*TtaAction
-	PendingAction PendingAction
+	ActionStack   []TtaAction
+	Pending       *PendingAction
 }
 
 func NewTta(options *TtaGameOptions) (result *TtaGame) {
@@ -94,6 +102,10 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		miliDecks:          make([]int, 4),
 		miliDiscardDecks:   make([]int, 4),
 		players:            make([]*PlayerBoard, 2),
+
+		CurrentPlayer: 0,
+		ActionStack:   make([]TtaAction, 0),
+		Pending:       nil,
 	}
 	game.cardSchools = InitBasicCardSchools()
 	for i := 0; i < options.PlayerCount; i++ {
@@ -363,7 +375,7 @@ func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {
 }
 
 func (g *TtaGame) ProcessMove(move *Move) (err error) {
-	switch g.PendingAction.Type {
+	switch g.Pending.Type {
 	case CIVIL:
 		return g.processCivilMove(move)
 	case DISCARD_MILITARY:
@@ -372,3 +384,22 @@ func (g *TtaGame) ProcessMove(move *Move) (err error) {
 		return fmt.Errorf("Invalid PendingAction")
 	}
 }
+
+func (g *TtaGame) actionStackEmpty() bool {
+	return len(g.ActionStack) <= 0
+}
+
+func (g *TtaGame) pushAction(action TtaAction) {
+	g.ActionStack = append(g.ActionStack, action)
+}
+
+func (g *TtaGame) popAction() TtaAction {
+	result := g.ActionStack[len(g.ActionStack) - 1]
+	g.ActionStack = g.ActionStack[:len(g.ActionStack) - 1]
+	return result
+}
+
+func (g *TtaGame) TryResolveAction(move *Move) (err error) {
+	return nil
+}
+

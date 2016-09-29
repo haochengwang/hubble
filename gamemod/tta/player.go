@@ -2359,7 +2359,7 @@ func (p *PlayerBoard) useCivilSpecialAbility(sa int, attachment interface{}) {
 	}
 }
 
-func (p* PlayerBoard) drawMiliCards(count int) {
+func (p *PlayerBoard) drawMiliCards(count int) {
 	csm := p.game.cardStackManager
 	for i := 0; i < count; i++ {
 		csm.processRequest(&MoveCardRequest{

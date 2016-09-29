@@ -57,7 +57,7 @@ func toAttachment(game *TtaGame, splitted []string) interface{} {
 	}
 }
 
-func toPlayAttachment(game *TtaGame, splitted []string) interface{} {
+func toPlayAttachment(game *TtaGame, splitted []string) []int {
 	result := make([]int, 0)
 	c := -1
 	for i := 1; i < len(splitted); i++ {
@@ -128,8 +128,6 @@ func toPlayAttachment(game *TtaGame, splitted []string) interface{} {
 		}
 
 		return []int{stack1, index1, index2}
-	} else if len(result) == 1 {
-		return result[0]
 	} else {
 		return result
 	}
@@ -151,23 +149,29 @@ func parseCommand(game *TtaGame, command string) {
 		}
 	case "end", "e":
 		fmt.Println("OK")
-		game.players[0].doProductionPhase()
+		game.TryResolveMove(&Move{
+			FromPlayer: 0,
+			MoveType:   CIVIL_END,
+		})
+		/*game.players[0].doProductionPhase()
 		game.players[0].clearupTurn()
 		game.players[0].drawMiliCards(2)
 		game.weedOut(3)
-		game.refillWheels()
+		game.refillWheels()*/
 	case "fetch", "f":
 		if len(splitted) < 2 {
 			fmt.Println("Unknown command")
 		} else {
 			index, err := strconv.Atoi(splitted[1])
-
-			if err != nil || index < 0 || index > 13 ||
-				!game.players[0].canTakeCardFromWheel(index) {
-				fmt.Println("Invliad fetch command ", err)
+			err = game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   CIVIL_FETCH_CARD,
+				Data:       []int{index},
+			})
+			if err != nil {
+				fmt.Println(err.Error())
 			} else {
 				fmt.Println("OK")
-				game.players[0].takeCardFromWheel(index)
 			}
 		}
 	case "play", "p":
@@ -175,16 +179,16 @@ func parseCommand(game *TtaGame, command string) {
 			fmt.Println("Unknown command")
 		} else {
 			index, err := strconv.Atoi(splitted[1])
-
 			att := toPlayAttachment(game, splitted)
-
-			if err != nil || index < 0 || index > game.players[0].getCivilHandSize() ||
-				!game.players[0].canPlayHand(index, att) {
-				fmt.Println("Invliad play command ", err)
-				fmt.Println("Invliad play command ", game.players[0].canPlayHand(index, att))
+			err = game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   CIVIL_PLAY_CARD,
+				Data:       append([]int{index}, att...),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
 			} else {
 				fmt.Println("OK")
-				game.players[0].playHand(index, att)
 			}
 		}
 	case "incpop", "i":

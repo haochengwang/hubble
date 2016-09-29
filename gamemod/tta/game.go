@@ -13,11 +13,12 @@ type TtaGameOptions struct {
 }
 
 type PendingActionType int
+
 const (
-	CIVIL PendingActionType = 1
-	DISCARD_MILITARY        = 2
-	REMOVE_YELLOW           = 3
-	REMOVE_BLUE             = 4
+	CIVIL            PendingActionType = 1
+	DISCARD_MILITARY                   = 2
+	REMOVE_YELLOW                      = 3
+	REMOVE_BLUE                        = 4
 )
 
 type PendingAction struct {
@@ -26,6 +27,7 @@ type PendingAction struct {
 }
 
 type MoveType int
+
 const (
 	CIVIL_FETCH_CARD MoveType = iota
 	CIVIL_PLAY_CARD
@@ -106,6 +108,15 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.initBasicCards(options)
 	game.refillWheels()
 	game.banishAgeACards()
+
+	game.StateStack = []StateHolder{
+		&CivilStateHolder{
+			BaseStateHolder{
+				game: game,
+			},
+			false,
+		},
+	}
 	return game
 }
 
@@ -126,7 +137,7 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			continue
 		}
 		var cardCountIdx int
-		if options.PlayerCount == 1 {  // Solo test mode
+		if options.PlayerCount == 1 { // Solo test mode
 			cardCountIdx = 0
 		} else {
 			cardCountIdx = options.PlayerCount - 2
@@ -246,6 +257,9 @@ func (g *TtaGame) refillWheels() {
 }
 
 func (g *TtaGame) getCardOnGreatWheel(index int) *Card {
+	if index < 0 || index >= 13 {
+		return nil
+	}
 	csm := g.cardStackManager
 	return csm.getFirstCard(g.greatWheel[index])
 }
@@ -358,29 +372,40 @@ func (g *TtaGame) pushStateHolder(stateHolder StateHolder) {
 }
 
 func (g *TtaGame) popStateHolder() StateHolder {
-	result := g.StateStack[len(g.StateStack) - 1]
-	g.StateStack = g.StateStack[:len(g.StateStack) - 1]
+	result := g.StateStack[len(g.StateStack)-1]
+	g.StateStack = g.StateStack[:len(g.StateStack)-1]
 	return result
 }
 
 func (g *TtaGame) peekStateHolder() StateHolder {
-	return g.StateStack[len(g.StateStack) - 1]
+	return g.StateStack[len(g.StateStack)-1]
 }
 
 func (g *TtaGame) TryResolveMove(move *Move) (err error) {
+	fmt.Println("TryResolveMove 1")
 	stateHolder := g.peekStateHolder()
+	fmt.Println("TryResolveMove 2")
 	if !stateHolder.IsPending() {
+		fmt.Println("TryResolveMove 3")
 		panic(stateHolder)
 	}
+	fmt.Println("TryResolveMove 4")
 	if legal, reason := stateHolder.IsMoveLegal(move); !legal {
+
+		fmt.Println("TryResolveMove 5")
 		return fmt.Errorf(reason)
 	}
+
+	fmt.Println("TryResolveMove 6")
 	stateHolder.Resolve(move)
 	for {
+		fmt.Println("TryResolveMove 7")
 		stateHolder = g.peekStateHolder()
 		if stateHolder.IsPending() {
 			return nil
+		} else {
+			stateHolder.Resolve(nil)
+			g.popStateHolder()
 		}
 	}
 }
-

@@ -35,6 +35,7 @@ const (
 	CIVIL_UPGRADE
 	CIVIL_SPECIAL_ABILITY
 	CIVIL_END
+	DISCARD_MILITARY_CARDS
 	CHOOSE_YELLOW
 	CHOOSE_BLUE
 )
@@ -44,26 +45,6 @@ type Move struct {
 	MoveType   MoveType
 
 	Data []int
-}
-
-type TtaActionType int
-const (
-	ACTION_POLITICAL TtaActionType = iota
-	ACTION_CIVIL
-	ACTION_EVENT
-	ACTION_COLONISE
-	ACTION_AGGRESSION
-	ACTION_WAR
-	ACTION_PACT
-	ACTION_FETCH_CARD  // Only for round 1
-	ACTION_DECAY_AND_PRODUCE
-	ACTION_DISCARD_MILITARY
-	ACTION_DRAW_MILITARY
-)
-
-type TtaAction struct {
-	Type       TtaActionType
-	Attachment interface{}
 }
 
 type TtaGame struct {
@@ -85,8 +66,7 @@ type TtaGame struct {
 
 	// Pending action
 	CurrentPlayer int
-	ActionStack   []TtaAction
-	Pending       *PendingAction
+	StateStack    []StateHolder
 }
 
 func NewTta(options *TtaGameOptions) (result *TtaGame) {
@@ -104,8 +84,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		players:            make([]*PlayerBoard, 2),
 
 		CurrentPlayer: 0,
-		ActionStack:   make([]TtaAction, 0),
-		Pending:       nil,
+		StateStack:    make([]StateHolder, 0),
 	}
 	game.cardSchools = InitBasicCardSchools()
 	for i := 0; i < options.PlayerCount; i++ {
@@ -374,32 +353,34 @@ func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {
 	return nil
 }
 
-func (g *TtaGame) ProcessMove(move *Move) (err error) {
-	switch g.Pending.Type {
-	case CIVIL:
-		return g.processCivilMove(move)
-	case DISCARD_MILITARY:
-		return g.processDiscardMilitaryMove(move)
-	default:
-		return fmt.Errorf("Invalid PendingAction")
-	}
+func (g *TtaGame) pushStateHolder(stateHolder StateHolder) {
+	g.StateStack = append(g.StateStack, stateHolder)
 }
 
-func (g *TtaGame) actionStackEmpty() bool {
-	return len(g.ActionStack) <= 0
-}
-
-func (g *TtaGame) pushAction(action TtaAction) {
-	g.ActionStack = append(g.ActionStack, action)
-}
-
-func (g *TtaGame) popAction() TtaAction {
-	result := g.ActionStack[len(g.ActionStack) - 1]
-	g.ActionStack = g.ActionStack[:len(g.ActionStack) - 1]
+func (g *TtaGame) popStateHolder() StateHolder {
+	result := g.StateStack[len(g.StateStack) - 1]
+	g.StateStack = g.StateStack[:len(g.StateStack) - 1]
 	return result
 }
 
-func (g *TtaGame) TryResolveAction(move *Move) (err error) {
-	return nil
+func (g *TtaGame) peekStateHolder() StateHolder {
+	return g.StateStack[len(g.StateStack) - 1]
+}
+
+func (g *TtaGame) TryResolveMove(move *Move) (err error) {
+	stateHolder := g.peekStateHolder()
+	if !stateHolder.IsPending() {
+		panic(stateHolder)
+	}
+	if legal, reason := stateHolder.IsMoveLegal(move); !legal {
+		return fmt.Errorf(reason)
+	}
+	stateHolder.Resolve(move)
+	for {
+		stateHolder = g.peekStateHolder()
+		if stateHolder.IsPending() {
+			return nil
+		}
+	}
 }
 

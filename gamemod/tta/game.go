@@ -50,7 +50,7 @@ type Move struct {
 }
 
 type TtaGame struct {
-        // Game options
+	// Game options
 	options *TtaGameOptions
 
 	cardStackManager   *CardStackUniversalManager
@@ -96,6 +96,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.cardSchools = InitBasicCardSchools()
 	for i := 0; i < options.PlayerCount; i++ {
 		game.players[i] = initPlayerBoard(game)
+		game.players[i].setUsableWhiteTokens(i + 1)
 	}
 
 	for i := 0; i < 13; i++ {
@@ -327,6 +328,16 @@ func (g *TtaGame) weedOut(position int) {
 	}
 }
 
+func (g *TtaGame) countPlayersWithPowerMoreThan(power int) int {
+	result := 0
+	for _, player := range g.players {
+		if player.calcPower() > power {
+			result++
+		}
+	}
+	return result
+}
+
 func (g *TtaGame) processCivilMove(move *Move) (err error) {
 	if move.FromPlayer != g.CurrentPlayer {
 		return fmt.Errorf("Not current player.")
@@ -367,7 +378,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid build command.")
 		}
 		stack := move.Data[0]
-		index := move.Data[0]
+		index := move.Data[1]
 		if !p.canBuild(stack, index, 0) {
 			return fmt.Errorf("Invalid build command")
 		}

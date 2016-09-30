@@ -700,7 +700,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture: 1,
 		productionTech:    1,
 		cardCounts:        []int{1, 1, 1},
-		specialAbilities:  []int{SA_LIB_OF_ALEXANDRIA},
+		traits:            []int{TRAIT_LIB_OF_ALEXANDRIA},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:              "Colossus",
@@ -730,7 +730,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   1,
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_GREAT_WALL},
+		traits:              []int{TRAIT_GREAT_WALL},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:          "St. Peter's Basilica",
@@ -741,7 +741,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   2,
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_ST_PETERS_BASILICA},
+		traits:              []int{TRAIT_ST_PETERS_BASILICA},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:        "Univ. Carolina",
@@ -762,7 +762,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionCulture:   3,
 		productionBlueToken: 1,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_TAJ_MAHAL},
+		traits:              []int{TRAIT_TAJ_MAHAL},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Transcont. RR",
@@ -772,7 +772,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		wonderBuildCosts: []int{3, 3, 3, 3},
 		productionPower:  4,
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_TRANSCONT_RR},
+		traits:           []int{TRAIT_TRANSCONT_RR},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "Eiffel Tower",
@@ -803,7 +803,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{4, 2, 2, 4},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_OCEAN_LINER_SERVICE},
+		traits:           []int{TRAIT_OCEAN_LINER_SERVICE},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Hollywood",
@@ -812,7 +812,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{5, 6, 5},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_HOLLYWOOD},
+		traits:           []int{TRAIT_HOLLYWOOD},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Internet",
@@ -821,7 +821,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{2, 3, 4, 3, 2},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_INTERNET},
+		traits:           []int{TRAIT_INTERNET},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "First Space Flight",
@@ -830,7 +830,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{1, 2, 4, 9},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_FIRST_SPACE_FLIGHT},
+		traits:           []int{TRAIT_FIRST_SPACE_FLIGHT},
 	})
 	schools = append(schools, &CardSchool{ // TODO: other wonder effects
 		schoolName:       "Fast Food Chains",
@@ -839,7 +839,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:        []CardType{CARDTYPE_WONDER},
 		wonderBuildCosts: []int{4, 4, 4, 4},
 		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_FAST_FOOD_CHAINS},
+		traits:           []int{TRAIT_FAST_FOOD_CHAINS},
 	})
 
 	// Leaders all have special abilities
@@ -851,7 +851,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionPower:    1,
 		productionRedToken: 1,
 		cardCounts:         []int{1, 1, 1},
-		specialAbilities:   []int{SA_JULIUS_CAESAR},
+		traits:             []int{TRAIT_JULIUS_CAESAR},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "Homer",
@@ -860,15 +860,15 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_HOMER},
+		traits:              []int{TRAIT_HOMER},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Moses",
-		shortName:        "Moses",
-		age:              0,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_MOSES},
+		schoolName: "Moses",
+		shortName:  "Moses",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_MOSES},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Hammurabi",
@@ -877,31 +877,31 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:  []CardType{CARDTYPE_LEADER},
 		cardCounts: []int{1, 1, 1},
 
-		specialAbilities: []int{SA_HAMMURABI},
+		traits: []int{TRAIT_HAMMURABI},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Aristotle",
-		shortName:        "Arist.",
-		age:              0,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_ARISTOTLE},
+		schoolName: "Aristotle",
+		shortName:  "Arist.",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_ARISTOTLE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Alexander the Great",
-		shortName:        "Alex.",
-		age:              0,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_ALEXANDER_THE_GREAT},
+		schoolName: "Alexander the Great",
+		shortName:  "Alex.",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_ALEXANDER_THE_GREAT},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Michelangelo",
-		shortName:        "Michel.",
-		age:              1,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_MICHELANGELO},
+		schoolName: "Michelangelo",
+		shortName:  "Michel.",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_MICHELANGELO},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Joan of Arc",
@@ -911,39 +911,39 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionRedToken: 1,
 		productionCulture:  1,
 		cardCounts:         []int{1, 1, 1},
-		specialAbilities:   []int{SA_JOAN_OF_ARC},
+		traits:             []int{TRAIT_JOAN_OF_ARC},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Leonardo Da Vinci",
-		shortName:        "Da Vinci",
-		age:              1,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_LEONARDO_DA_VINCI},
+		schoolName: "Leonardo Da Vinci",
+		shortName:  "Da Vinci",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_LIB_LAB_AMPLIFY, TRAIT_LEONARDO_DA_VINCI},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Genghis Khan",
-		shortName:        "Genghis.",
-		age:              1,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_GENGHIS_KHAN},
+		schoolName: "Genghis Khan",
+		shortName:  "Genghis.",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_GENGHIS_KHAN},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Christopher Columbus",
-		shortName:        "Columbus",
-		age:              1,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_CHRISTOPHER_COLUMBUS},
+		schoolName: "Christopher Columbus",
+		shortName:  "Columbus",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_CHRISTOPHER_COLUMBUS},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Frederick Barbarosa",
-		shortName:        "Barbaros.",
-		age:              1,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_FREDERICK_BARBAROSSA},
+		schoolName: "Frederick Barbarosa",
+		shortName:  "Barbaros.",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_FREDERICK_BARBAROSSA},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "William Shakespeare",
@@ -952,15 +952,15 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 1,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_WILLIAM_SHAKESPEARE},
+		traits:              []int{TRAIT_WILLIAM_SHAKESPEARE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "James Cook",
-		shortName:        "Cook",
-		age:              2,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_JAMES_COOK},
+		schoolName: "James Cook",
+		shortName:  "Cook",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_JAMES_COOK},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Napoleon Bonaparte",
@@ -969,7 +969,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:          []CardType{CARDTYPE_LEADER},
 		productionRedToken: 2,
 		cardCounts:         []int{1, 1, 1},
-		specialAbilities:   []int{SA_NAPOLEON_BONAPARTE},
+		traits:             []int{TRAIT_NAPOLEON_BONAPARTE},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:         "Maximillien Robespierre",
@@ -978,31 +978,31 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:          []CardType{CARDTYPE_LEADER},
 		productionRedToken: 1,
 		cardCounts:         []int{1, 1, 1},
-		specialAbilities:   []int{SA_MAXIMILLIEN_ROBESPIERRE},
+		traits:             []int{TRAIT_MAXIMILLIEN_ROBESPIERRE},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "J.S. Bach",
-		shortName:        "Bach",
-		age:              2,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_J_S_BACH},
+		schoolName: "J.S. Bach",
+		shortName:  "Bach",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_J_S_BACH},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Isaac Newton",
-		shortName:        "Newton",
-		age:              2,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_ISAAC_NEWTON},
+		schoolName: "Isaac Newton",
+		shortName:  "Newton",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_LIB_LAB_AMPLIFY, TRAIT_ISAAC_NEWTON},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Albert Einstein",
-		shortName:        "Einstein",
-		age:              3,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_LIB_LAB_AMPLIFY, SA_ALBERT_EINSTEIN},
+		schoolName: "Albert Einstein",
+		shortName:  "Einstein",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_LIB_LAB_AMPLIFY, TRAIT_ALBERT_EINSTEIN},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:        "Mahatma Gandhi",
@@ -1011,7 +1011,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:         []CardType{CARDTYPE_LEADER},
 		productionCulture: 2,
 		cardCounts:        []int{1, 1, 1},
-		specialAbilities:  []int{SA_MAHATMA_GANDHI},
+		traits:            []int{TRAIT_MAHATMA_GANDHI},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:          "Charlie Chaplin",
@@ -1020,31 +1020,31 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_LEADER},
 		productionHappiness: 2,
 		cardCounts:          []int{1, 1, 1},
-		specialAbilities:    []int{SA_CHARLIE_CHAPLIN},
+		traits:              []int{TRAIT_CHARLIE_CHAPLIN},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Bill Gates",
-		shortName:        "B. Gates",
-		age:              3,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_BILL_GATES},
+		schoolName: "Bill Gates",
+		shortName:  "B. Gates",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_BILL_GATES},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Winston Churchill",
-		shortName:        "Church.",
-		age:              3,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_WINSTON_CHURCHILL},
+		schoolName: "Winston Churchill",
+		shortName:  "Church.",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_WINSTON_CHURCHILL},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:       "Sid Meier",
-		shortName:        "S. Meier",
-		age:              3,
-		cardTypes:        []CardType{CARDTYPE_LEADER},
-		cardCounts:       []int{1, 1, 1},
-		specialAbilities: []int{SA_SID_MEIER},
+		schoolName: "Sid Meier",
+		shortName:  "S. Meier",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_LEADER},
+		cardCounts: []int{1, 1, 1},
+		traits:     []int{TRAIT_SID_MEIER},
 	})
 
 	// Actions
@@ -1611,6 +1611,436 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionPower:       11,
 		productionPowerLesser: 6,
 		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Agriculture",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Civilization",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Crafts",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Markets",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Politics",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Religion",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Science",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Settlement",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Trade Route",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Development of Warfare",
+		age:        0,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Barbarians",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Border Conflict",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Crusades",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Cultural Influence",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Foray",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Good Harvest",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Immigration",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "New Deposits",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Pestilence",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Raiders",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Rats",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Rebellion",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Reign of Terror",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Scientific Breakthrough",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Uncertain Borders",
+		age:        1,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Civil Unrest",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Cold War",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Crime Wave",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Economic Progress",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Emigration",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Iconoclasm",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Independence Declaration",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "International Agreement",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "National Pride",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Politics of Strength",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Popularization of Science",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Prosperity",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Ravages of Time",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Refugees",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Terrorism",
+		age:        2,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Agriculture",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Architecture",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Balance",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Colonies",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Competition",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Government",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Happiness",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Industry",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Population",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Progress",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Science",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Strength",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Technology",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Variety",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName: "Impact of Wonders",
+		age:        3,
+		cardTypes:  []CardType{CARDTYPE_EVENT},
+		cardCounts: []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Developed Territory I",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 1,
+		productionBlueToken:   1,
+		actionBonus:           3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:          "Historic Territory I",
+		age:                 1,
+		cardTypes:           []CardType{CARDTYPE_TERRITORY},
+		productionHappiness: 1,
+		actionBonus:         6,
+		cardCounts:          []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Inhabited Territory I",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 2,
+		actionBonus:           1,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:      "Strategic Territory I",
+		age:             1,
+		cardTypes:       []CardType{CARDTYPE_TERRITORY},
+		productionPower: 2,
+		actionBonus:     3,
+		cardCounts:      []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Vast Territory I",
+		age:                   1,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 3,
+		productionBlueToken:   -1,
+		actionBonus:           3,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:          "Wealthly Territory I",
+		age:                 1,
+		cardTypes:           []CardType{CARDTYPE_TERRITORY},
+		productionBlueToken: 3,
+		actionBonus:         5,
+		cardCounts:          []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Developed Territory II",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 2,
+		productionBlueToken:   2,
+		actionBonus:           5,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:          "Historic Territory II",
+		age:                 2,
+		cardTypes:           []CardType{CARDTYPE_TERRITORY},
+		productionHappiness: 2,
+		actionBonus:         11,
+		cardCounts:          []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Inhabited Territory II",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 3,
+		actionBonus:           2,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:      "Strategic Territory II",
+		age:             2,
+		cardTypes:       []CardType{CARDTYPE_TERRITORY},
+		productionPower: 4,
+		actionBonus:     5,
+		cardCounts:      []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:            "Vast Territory II",
+		age:                   2,
+		cardTypes:             []CardType{CARDTYPE_TERRITORY},
+		productionYellowToken: 4,
+		productionBlueToken:   -1,
+		actionBonus:           4,
+		cardCounts:            []int{1, 1, 1},
+	})
+	schools = append(schools, &CardSchool{
+		schoolName:          "Wealthly Territory II",
+		age:                 2,
+		cardTypes:           []CardType{CARDTYPE_TERRITORY},
+		productionBlueToken: 4,
+		actionBonus:         9,
+		cardCounts:          []int{1, 1, 1},
 	})
 
 	result = make(map[int]*CardSchool)

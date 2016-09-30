@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type StateHolder interface {
 	IsPending() bool
 	IsMoveLegal(move interface{}) (legal bool, reason string)
@@ -36,34 +32,36 @@ func (h *TurnStartStateHolder) Resolve(move interface{}) {
 
 	g.popStateHolder()
 	g.pushStateHolder(&TurnEndStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
 	})
 	g.pushStateHolder(&DrawMilitaryCardsStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
+		player:      g.CurrentPlayer,
 		toRedTokens: true,
 	})
 	g.pushStateHolder(&DiscardMilitaryCardsStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
 		player:    g.CurrentPlayer,
 		toMaxHand: true,
 	})
 	g.pushStateHolder(&ProductionPhaseStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
 	})
 	g.pushStateHolder(&CivilStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
 	})
 }
+
 type TurnEndStateHolder struct {
 	base BaseStateHolder
 }
@@ -77,8 +75,10 @@ func (h *TurnEndStateHolder) IsMoveLegal(move interface{}) (legal bool, reason s
 }
 
 func (h *TurnEndStateHolder) Resolve(move interface{}) {
-	fmt.Println("end resolve")
 	g := h.base.game
+	p := g.players[g.CurrentPlayer]
+	p.refillWhiteRedTokens()
+	p.clearupTurn()
 	g.CurrentPlayer += 1
 	if g.CurrentPlayer >= g.options.PlayerCount {
 		g.CurrentPlayer = 0
@@ -89,7 +89,7 @@ func (h *TurnEndStateHolder) Resolve(move interface{}) {
 
 	g.popStateHolder()
 	g.pushStateHolder(&TurnStartStateHolder{
-		base: BaseStateHolder {
+		base: BaseStateHolder{
 			game: g,
 		},
 	})
@@ -110,6 +110,11 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 		return false, "Not current player."
 	}
 	p := h.base.game.players[h.base.game.CurrentPlayer]
+	if h.base.game.getCurrentAge() == 0 { // Age A only fetch allowed
+		if move.MoveType != CIVIL_FETCH_CARD && move.MoveType != CIVIL_END {
+			return false, "Only fetch card is allowed in first round"
+		}
+	}
 	switch move.MoveType {
 	case CIVIL_FETCH_CARD:
 		if len(move.Data) != 1 {
@@ -139,13 +144,13 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 		if !p.canIncreasePop() {
 			return false, "Invalid incpop command"
 		}
-		p.increasePop()
+		return true, ""
 	case CIVIL_BUILD:
 		if len(move.Data) < 2 {
 			return false, "Invalid build command."
 		}
 		stack := move.Data[0]
-		index := move.Data[0]
+		index := move.Data[1]
 		if !p.canBuild(stack, index, 0) {
 			return false, "Invalid build command"
 		}
@@ -307,10 +312,10 @@ func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
 }
 
 type DrawMilitaryCardsStateHolder struct {
-	base         BaseStateHolder
-	player       int
-	toRedTokens  bool
-	toDraw       int
+	base        BaseStateHolder
+	player      int
+	toRedTokens bool
+	toDraw      int
 }
 
 func (h *DrawMilitaryCardsStateHolder) drawCount() int {

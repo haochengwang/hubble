@@ -33,10 +33,10 @@ func cardIdToIndex(p *PlayerBoard, cardId int) (stack int, index int, ok bool) {
 
 func getIthHandCardSchool(game *TtaGame, index int) *CardSchool {
 	csm := game.cardStackManager
-	if index < 0 || index >= csm.getStackSize(game.players[0].stacks[HAND]) {
+	if index < 0 || index >= csm.getStackSize(game.players[game.CurrentPlayer].stacks[HAND]) {
 		return nil
 	}
-	card := csm.cardStacks[game.players[0].stacks[HAND]][index]
+	card := csm.cardStacks[game.players[game.CurrentPlayer].stacks[HAND]][index]
 	return game.cardSchools[card.schoolId]
 }
 
@@ -152,6 +152,8 @@ func parseCommand(game *TtaGame, command string) {
 		} else if splitted[1] == "p" {
 			PrintPublicArea(game)
 			PrintCurrentState(game)
+		} else {
+			fmt.Println("Unknown command")
 		}
 	case "end", "e":
 		fmt.Println("OK")
@@ -301,10 +303,18 @@ func parseCommand(game *TtaGame, command string) {
 			att := toAttachment(game, 2, splitted)
 
 			// Ugly, temporary code
-			if sa == 74 {
+			if sa == 74 { // Hammurabi
 				sa = 14
-			} else if sa == 66 {
+			} else if sa == 66 { // Ocean Liner Service
 				sa = 5
+			} else if sa == 72 { // Homer
+				sa = 12
+			} else if sa == 82 { // Barbarosa
+				sa = 22
+			} else if sa == 86 { // Robespierre
+				sa = 26
+			} else if sa == 93 { // Churchill
+				sa = 33
 			}
 
 			err = game.TryResolveMove(&Move{

@@ -531,9 +531,9 @@ func PrintCurrentState(game *TtaGame) {
 	stateHolder := game.peekStateHolder()
 	switch h := stateHolder.(type) {
 	case *CivilStateHolder:
-		fmt.Println("[PENDING]Waiting for player for civil actions")
+		fmt.Println("[PENDING]Waiting for player ", game.CurrentPlayer, " for civil actions")
 	case *DiscardMilitaryCardsStateHolder:
-		fmt.Println("[PENDING]Waiting for player for discard military cards")
+		fmt.Println("[PENDING]Waiting for player %v for discard military cards", h.player)
 	default:
 		fmt.Println(h)
 	}
@@ -549,7 +549,6 @@ func main() {
 		PlayerCount: 2,
 	}
 	game := NewTta(options)
-	game.players[0].refillWhiteRedTokens()
 	PrintGame(game)
 	for {
 		bio := bufio.NewReader(os.Stdin)

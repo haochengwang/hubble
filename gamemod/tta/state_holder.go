@@ -280,6 +280,10 @@ func (h *DiscardMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool
 }
 
 func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
+	if !h.IsPending() {
+		h.base.game.popStateHolder()
+		return
+	}
 	if m == nil {
 		return
 	}
@@ -288,5 +292,6 @@ func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
 	p.discardMiliCards(move.Data)
 	if !h.IsPending() {
 		h.base.game.popStateHolder()
+		return
 	}
 }

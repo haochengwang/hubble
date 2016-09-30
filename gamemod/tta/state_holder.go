@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type StateHolder interface {
 	IsPending() bool
 	IsMoveLegal(move interface{}) (legal bool, reason string)
@@ -8,6 +12,77 @@ type StateHolder interface {
 
 type BaseStateHolder struct {
 	game *TtaGame
+}
+
+type TurnStartStateHolder struct {
+	base BaseStateHolder
+}
+
+func (h *TurnStartStateHolder) IsPending() bool {
+	return false
+}
+
+func (h *TurnStartStateHolder) IsMoveLegal(move interface{}) (legal bool, reason string) {
+	return true, ""
+}
+
+func (h *TurnStartStateHolder) Resolve(move interface{}) {
+	fmt.Println("start resolve")
+	g := h.base.game
+
+	g.popStateHolder()
+	g.pushStateHolder(&TurnEndStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+	})
+	g.pushStateHolder(&DiscardMilitaryCardsStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+		player:    g.CurrentPlayer,
+		toMaxHand: true,
+	})
+	g.pushStateHolder(&ProductionPhaseStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+	})
+	g.pushStateHolder(&CivilStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+	})
+}
+type TurnEndStateHolder struct {
+	base BaseStateHolder
+}
+
+func (h *TurnEndStateHolder) IsPending() bool {
+	return false
+}
+
+func (h *TurnEndStateHolder) IsMoveLegal(move interface{}) (legal bool, reason string) {
+	return true, ""
+}
+
+func (h *TurnEndStateHolder) Resolve(move interface{}) {
+	fmt.Println("end resolve")
+	g := h.base.game
+	g.CurrentPlayer += 1
+	if g.CurrentPlayer >= g.options.PlayerCount {
+		g.CurrentPlayer = 0
+		if g.getCurrentAge() == 0 {
+			g.banishAgeACards()
+		}
+	}
+
+	g.popStateHolder()
+	g.pushStateHolder(&TurnStartStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+	})
 }
 
 type CivilStateHolder struct {
@@ -149,18 +224,36 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 		}
 		p.useCivilSpecialAbility(sa, attachment)
 	case CIVIL_END:
-		h.end = true
+		h.base.game.popStateHolder()
 	}
 }
 
-type DiscardMilitaryCardStateHolder struct {
+type ProductionPhaseStateHolder struct {
+	base BaseStateHolder
+}
+
+func (h *ProductionPhaseStateHolder) IsPending() bool {
+	return false
+}
+
+func (h *ProductionPhaseStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	return true, ""
+}
+
+func (h *ProductionPhaseStateHolder) Resolve(m interface{}) {
+	p := h.base.game.players[h.base.game.CurrentPlayer]
+	p.doProductionPhase()
+	h.base.game.popStateHolder()
+}
+
+type DiscardMilitaryCardsStateHolder struct {
 	base      BaseStateHolder
 	player    int
 	toMaxHand bool
 	toDiscard int
 }
 
-func (h *DiscardMilitaryCardStateHolder) toDiscardMax() int {
+func (h *DiscardMilitaryCardsStateHolder) toDiscardMax() int {
 	if h.toMaxHand {
 		p := h.base.game.players[h.player]
 		return p.getMilitaryHandSize() - p.getMaxMilitaryHandSize()
@@ -169,11 +262,11 @@ func (h *DiscardMilitaryCardStateHolder) toDiscardMax() int {
 	}
 }
 
-func (h *DiscardMilitaryCardStateHolder) IsPending() bool {
+func (h *DiscardMilitaryCardsStateHolder) IsPending() bool {
 	return h.toDiscardMax() > 0
 }
 
-func (h *DiscardMilitaryCardStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+func (h *DiscardMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
 	if m == nil {
 		return
 	}
@@ -186,11 +279,14 @@ func (h *DiscardMilitaryCardStateHolder) IsMoveLegal(m interface{}) (legal bool,
 	return p.canDiscardMiliCards(move.Data), "Invalid card indexes or size."
 }
 
-func (h *DiscardMilitaryCardStateHolder) Resolve(m interface{}) {
+func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
 	if m == nil {
 		return
 	}
 	move := m.(*Move)
 	p := h.base.game.players[h.player]
 	p.discardMiliCards(move.Data)
+	if !h.IsPending() {
+		h.base.game.popStateHolder()
+	}
 }

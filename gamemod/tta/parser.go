@@ -142,6 +142,7 @@ func parseCommand(game *TtaGame, command string) {
 			PrintUserBoard(game, game.players[0])
 		} else if splitted[1] == "p" {
 			PrintPublicArea(game)
+			PrintCurrentState(game)
 		}
 	case "end", "e":
 		fmt.Println("OK")

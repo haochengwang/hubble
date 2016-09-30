@@ -50,6 +50,9 @@ type Move struct {
 }
 
 type TtaGame struct {
+        // Game options
+	options *TtaGameOptions
+
 	cardStackManager   *CardStackUniversalManager
 	globalTokenManager *TokenBankUniversalManager
 	cardTokenManager   *TokenBankUniversalManager
@@ -76,6 +79,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		return nil
 	}
 	game := &TtaGame{
+		options:            options,
 		cardStackManager:   NewCardStackUniversalManager(),
 		globalTokenManager: NewTokenBankUniversalManager(),
 		cardTokenManager:   NewTokenBankUniversalManager(),
@@ -109,22 +113,15 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.refillWheels()
 	game.banishAgeACards()
 
+	game.players[0].drawMiliCards(5)
 	game.StateStack = []StateHolder{
-		&DiscardMilitaryCardStateHolder{
+		&TurnStartStateHolder{
 			base: BaseStateHolder{
 				game: game,
 			},
-			player:    0,
-			toMaxHand: true,
-		},
-		&CivilStateHolder{
-			base: BaseStateHolder{
-				game: game,
-			},
-			end: false,
 		},
 	}
-	game.players[0].drawMiliCards(5)
+	game.StateStack[0].Resolve(nil)
 	return game
 }
 
@@ -420,11 +417,13 @@ func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {
 }
 
 func (g *TtaGame) pushStateHolder(stateHolder StateHolder) {
+	fmt.Println("push ", stateHolder)
 	g.StateStack = append(g.StateStack, stateHolder)
 }
 
 func (g *TtaGame) popStateHolder() StateHolder {
 	result := g.StateStack[len(g.StateStack)-1]
+	fmt.Println("pop ", result)
 	g.StateStack = g.StateStack[:len(g.StateStack)-1]
 	return result
 }
@@ -448,19 +447,17 @@ func (g *TtaGame) TryResolveMove(move *Move) (err error) {
 	}
 
 	stateHolder.Resolve(move)
-	if stateHolder.IsPending() {
-		return nil
-	}
 	for {
 		if len(g.StateStack) == 0 {
 			// Game end
 			return
 		}
 		stateHolder = g.peekStateHolder()
+		fmt.Println("loop", stateHolder)
 		if stateHolder.IsPending() {
 			return nil
 		} else {
-			g.popStateHolder()
+			stateHolder.Resolve(nil)
 		}
 	}
 }

@@ -323,19 +323,22 @@ func paintHands(player *PlayerBoard) ([][]rune, int) {
 		" HANDS:                                       ",
 	}
 	result := toRunes(backGround)
-	for i, handCard := range csm.cardStacks[player.stacks[HAND]] {
+	h := 1
+	for _, handCard := range csm.cardStacks[player.stacks[HAND]] {
 		need = true
 		handSchool := player.game.cardSchools[handCard.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
-				handSchool.schoolName}), 15, 1+i)
+				handSchool.schoolName}), 15, h)
+		h += 1
 	}
-	for i, handCard := range csm.cardStacks[player.stacks[MILI_HAND]] {
+	for _, handCard := range csm.cardStacks[player.stacks[MILI_HAND]] {
 		need = true
 		handSchool := player.game.cardSchools[handCard.schoolId]
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
-				handSchool.schoolName}), 15, 1+i)
+				handSchool.schoolName}), 15, h)
+		h += 1
 	}
 	if need {
 		return result, len(result)
@@ -522,6 +525,18 @@ func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
 	hands, height := paintHands(player)
 	runes = printUpon(runes, hands, 1, h)
 	PrintAll(toStrings(runes))
+}
+
+func PrintCurrentState(game *TtaGame) {
+	stateHolder := game.peekStateHolder()
+	switch h := stateHolder.(type) {
+	case *CivilStateHolder:
+		fmt.Println("[PENDING]Waiting for player for civil actions")
+	case *DiscardMilitaryCardsStateHolder:
+		fmt.Println("[PENDING]Waiting for player for discard military cards")
+	default:
+		fmt.Println(h)
+	}
 }
 
 func PrintGame(game *TtaGame) {

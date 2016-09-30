@@ -112,6 +112,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.publicTacticDeck = game.cardStackManager.newStack()
 
 	game.initBasicCards(options)
+	game.refillWheels()
 
 	game.StateStack = []StateHolder{
 		&TurnStartStateHolder{

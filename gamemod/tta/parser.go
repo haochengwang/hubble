@@ -68,12 +68,13 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 		}
 	}
 
+	cp := game.CurrentPlayer
 	if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
-		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		stack1, index1, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
 			return nil
 		}
-		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		stack2, index2, ok := cardIdToIndex(game.players[cp], result[1])
 		if !ok {
 			return nil
 		}
@@ -83,18 +84,18 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 
 		return []int{stack1, index1, index2}
 	} else if len(result) == 1 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_RICH_LAND) {
-		stack, index, ok := cardIdToIndex(game.players[0], result[0])
+		stack, index, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
 			return nil
 		}
 
 		return []int{stack, index}
 	} else if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_RICH_LAND) {
-		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		stack1, index1, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
 			return nil
 		}
-		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		stack2, index2, ok := cardIdToIndex(game.players[cp], result[1])
 		if !ok {
 			return nil
 		}
@@ -104,18 +105,18 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 
 		return []int{stack1, index1, index2}
 	} else if len(result) == 1 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
-		stack, index, ok := cardIdToIndex(game.players[0], result[0])
+		stack, index, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
 			return nil
 		}
 
 		return []int{stack, index}
 	} else if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_URBAN_GROWTH) {
-		stack1, index1, ok := cardIdToIndex(game.players[0], result[0])
+		stack1, index1, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
 			return nil
 		}
-		stack2, index2, ok := cardIdToIndex(game.players[0], result[1])
+		stack2, index2, ok := cardIdToIndex(game.players[cp], result[1])
 		if !ok {
 			return nil
 		}
@@ -128,18 +129,26 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 		return result
 	}
 }
+
 func parseCommand(game *TtaGame, command string) {
 	splitted := strings.Split(command, " ")
 	if len(splitted) < 1 {
 		fmt.Println("Unknown command")
 	}
 
+	cp := game.CurrentPlayer
 	switch splitted[0] {
 	case "show", "s":
 		if len(splitted) < 2 {
 			fmt.Println("Unknown command")
 		} else if splitted[1] == "0" {
 			PrintUserBoard(game, game.players[0])
+		} else if splitted[1] == "1" && game.options.PlayerCount >= 2 {
+			PrintUserBoard(game, game.players[1])
+		} else if splitted[1] == "2" && game.options.PlayerCount >= 3 {
+			PrintUserBoard(game, game.players[2])
+		} else if splitted[1] == "3" && game.options.PlayerCount >= 4 {
+			PrintUserBoard(game, game.players[3])
 		} else if splitted[1] == "p" {
 			PrintPublicArea(game)
 			PrintCurrentState(game)
@@ -147,7 +156,7 @@ func parseCommand(game *TtaGame, command string) {
 	case "end", "e":
 		fmt.Println("OK")
 		game.TryResolveMove(&Move{
-			FromPlayer: 0,
+			FromPlayer: cp,
 			MoveType:   CIVIL_END,
 		})
 		/*game.players[0].doProductionPhase()
@@ -161,7 +170,7 @@ func parseCommand(game *TtaGame, command string) {
 		} else {
 			index, err := strconv.Atoi(splitted[1])
 			err = game.TryResolveMove(&Move{
-				FromPlayer: 0,
+				FromPlayer: cp,
 				MoveType:   CIVIL_FETCH_CARD,
 				Data:       []int{index},
 			})
@@ -178,7 +187,7 @@ func parseCommand(game *TtaGame, command string) {
 			index, err := strconv.Atoi(splitted[1])
 			att := toPlayAttachment(game, splitted)
 			err = game.TryResolveMove(&Move{
-				FromPlayer: 0,
+				FromPlayer: cp,
 				MoveType:   CIVIL_PLAY_CARD,
 				Data:       append([]int{index}, att...),
 			})
@@ -190,7 +199,7 @@ func parseCommand(game *TtaGame, command string) {
 		}
 	case "incpop", "i":
 		err := game.TryResolveMove(&Move{
-			FromPlayer: 0,
+			FromPlayer: cp,
 			MoveType:   CIVIL_INC_POP,
 			Data:       []int{},
 		})
@@ -208,13 +217,13 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("Invalid build command")
 				return
 			}
-			stack, index, ok := cardIdToIndex(game.players[0], cardId)
+			stack, index, ok := cardIdToIndex(game.players[cp], cardId)
 			if !ok {
 				fmt.Println("Invalid build command")
 				return
 			}
 			err = game.TryResolveMove(&Move{
-				FromPlayer: 0,
+				FromPlayer: cp,
 				MoveType:   CIVIL_BUILD,
 				Data:       append([]int{stack, index}),
 			})
@@ -238,12 +247,12 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("Invalid upgrade command")
 				return
 			}
-			stack1, index1, ok := cardIdToIndex(game.players[0], cardId1)
+			stack1, index1, ok := cardIdToIndex(game.players[cp], cardId1)
 			if !ok {
 				fmt.Println("Invalid upgrade command")
 				return
 			}
-			stack2, index2, ok := cardIdToIndex(game.players[0], cardId2)
+			stack2, index2, ok := cardIdToIndex(game.players[cp], cardId2)
 			if !ok {
 				fmt.Println("Invalid upgrade command")
 				return
@@ -253,7 +262,7 @@ func parseCommand(game *TtaGame, command string) {
 				return
 			}
 			err = game.TryResolveMove(&Move{
-				FromPlayer: 0,
+				FromPlayer: cp,
 				MoveType:   CIVIL_UPGRADE,
 				Data:       append([]int{stack1, index1, index2}),
 			})
@@ -274,7 +283,7 @@ func parseCommand(game *TtaGame, command string) {
 			}
 		}
 		err := game.TryResolveMove(&Move{
-			FromPlayer: 0,
+			FromPlayer: cp,
 			MoveType:   CIVIL_BUILD_WONDER,
 			Data:       append([]int{step}),
 		})
@@ -316,7 +325,7 @@ func parseCommand(game *TtaGame, command string) {
 			att := toAttachment(game, 1, splitted)
 
 			err := game.TryResolveMove(&Move{
-				FromPlayer: 0,
+				FromPlayer: cp,
 				MoveType:   DISCARD_MILITARY_CARDS,
 				Data:       att,
 			})

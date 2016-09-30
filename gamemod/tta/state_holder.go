@@ -30,8 +30,8 @@ func (h *TurnStartStateHolder) Resolve(move interface{}) {
 	g := h.base.game
 	// Only rotate the wheel when age is not A
 	if g.getCurrentAge() > 0 {
-		g.refillWheels()
 		g.weedOut(3)
+		g.refillWheels()
 	}
 
 	g.popStateHolder()

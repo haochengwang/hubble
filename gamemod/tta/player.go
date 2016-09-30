@@ -2371,7 +2371,7 @@ func (p *PlayerBoard) useCivilSpecialAbility(sa int, attachment interface{}) {
 func (p *PlayerBoard) drawMiliCards(count int) {
 	csm := p.game.cardStackManager
 	for i := 0; i < count; i++ {
-		if csm.getStackSize(p.game.miliDecks[p.game.getCurrentAge()]) > 0 &&
+		if csm.getStackSize(p.game.miliDecks[p.game.getCurrentAge()]) == 0 &&
 			csm.getStackSize(p.game.miliDiscardDecks[p.game.getCurrentAge()]) > 0 {
 			p.game.reshuffleMilitaryDeck()
 		}

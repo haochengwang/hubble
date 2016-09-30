@@ -27,14 +27,24 @@ func (h *TurnStartStateHolder) IsMoveLegal(move interface{}) (legal bool, reason
 }
 
 func (h *TurnStartStateHolder) Resolve(move interface{}) {
-	fmt.Println("start resolve")
 	g := h.base.game
+	// Only rotate the wheel when age is not A
+	if g.getCurrentAge() > 0 {
+		g.refillWheels()
+		g.weedOut(3)
+	}
 
 	g.popStateHolder()
 	g.pushStateHolder(&TurnEndStateHolder{
 		base: BaseStateHolder {
 			game: g,
 		},
+	})
+	g.pushStateHolder(&DrawMilitaryCardsStateHolder{
+		base: BaseStateHolder {
+			game: g,
+		},
+		toRedTokens: true,
 	})
 	g.pushStateHolder(&DiscardMilitaryCardsStateHolder{
 		base: BaseStateHolder {
@@ -294,4 +304,39 @@ func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
 		h.base.game.popStateHolder()
 		return
 	}
+}
+
+type DrawMilitaryCardsStateHolder struct {
+	base         BaseStateHolder
+	player       int
+	toRedTokens  bool
+	toDraw       int
+}
+
+func (h *DrawMilitaryCardsStateHolder) drawCount() int {
+	if h.toRedTokens {
+		p := h.base.game.players[h.player]
+		result := p.getUsableRedTokens()
+		if result > 3 {
+			return 3
+		} else {
+			return result
+		}
+	} else {
+		return h.toDraw
+	}
+}
+
+func (h *DrawMilitaryCardsStateHolder) IsPending() bool {
+	return false
+}
+
+func (h *DrawMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	return true, ""
+}
+
+func (h *DrawMilitaryCardsStateHolder) Resolve(m interface{}) {
+	p := h.base.game.players[h.player]
+	p.drawMiliCards(h.drawCount())
+	h.base.game.popStateHolder()
 }

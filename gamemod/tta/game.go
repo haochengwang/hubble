@@ -67,6 +67,7 @@ type TtaGame struct {
 	futureEventsDeck int
 	nowEventsDeck    int
 	pastEventsDeck   int
+	publicTacticDeck int
 	players          []*PlayerBoard
 
 	// Pending action
@@ -108,12 +109,10 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.futureEventsDeck = game.cardStackManager.newStack()
 	game.nowEventsDeck = game.cardStackManager.newStack()
 	game.pastEventsDeck = game.cardStackManager.newStack()
+	game.publicTacticDeck = game.cardStackManager.newStack()
 
 	game.initBasicCards(options)
-	game.refillWheels()
-	game.banishAgeACards()
 
-	game.players[0].drawMiliCards(5)
 	game.StateStack = []StateHolder{
 		&TurnStartStateHolder{
 			base: BaseStateHolder{

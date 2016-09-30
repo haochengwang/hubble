@@ -110,14 +110,66 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 	game.banishAgeACards()
 
 	game.StateStack = []StateHolder{
-		&CivilStateHolder{
-			BaseStateHolder{
+		&DiscardMilitaryCardStateHolder{
+			base: BaseStateHolder{
 				game: game,
 			},
-			false,
+			player:    0,
+			toMaxHand: true,
+		},
+		&CivilStateHolder{
+			base: BaseStateHolder{
+				game: game,
+			},
+			end: false,
 		},
 	}
+	game.players[0].drawMiliCards(5)
 	return game
+}
+
+func (g *TtaGame) getCurrentAge() int {
+	csm := g.cardStackManager
+	for i := 0; i <= 3; i++ {
+		if csm.getStackSize(g.ageStacks[i]) > 0 {
+			return i
+		}
+	}
+	return 4
+}
+
+func (g *TtaGame) reshuffleMilitaryDeck() {
+	csm := g.cardStackManager
+	for {
+		if csm.getStackSize(g.miliDiscardDecks[g.getCurrentAge()]) <= 0 {
+			break
+		}
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  g.miliDiscardDecks[g.getCurrentAge()],
+				position: 0,
+			},
+			targetPosition: CardPosition{
+				stackId:  g.miliDecks[g.getCurrentAge()],
+				position: 0,
+			},
+		})
+	}
+
+	cardCount := csm.getStackSize(g.miliDecks[g.getCurrentAge()])
+	randomPerm := rand.Perm(cardCount)
+	for j := 0; j < cardCount; j++ {
+		csm.processRequest(&SwapCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  g.miliDecks[g.getCurrentAge()],
+				position: j,
+			},
+			targetPosition: CardPosition{
+				stackId:  g.miliDecks[g.getCurrentAge()],
+				position: randomPerm[j],
+			},
+		})
+	}
 }
 
 func (g *TtaGame) checkDecay() {
@@ -382,29 +434,32 @@ func (g *TtaGame) peekStateHolder() StateHolder {
 }
 
 func (g *TtaGame) TryResolveMove(move *Move) (err error) {
-	fmt.Println("TryResolveMove 1")
+	if len(g.StateStack) == 0 {
+		// Game end
+		return
+	}
 	stateHolder := g.peekStateHolder()
-	fmt.Println("TryResolveMove 2")
 	if !stateHolder.IsPending() {
-		fmt.Println("TryResolveMove 3")
 		panic(stateHolder)
 	}
-	fmt.Println("TryResolveMove 4")
 	if legal, reason := stateHolder.IsMoveLegal(move); !legal {
 
-		fmt.Println("TryResolveMove 5")
 		return fmt.Errorf(reason)
 	}
 
-	fmt.Println("TryResolveMove 6")
 	stateHolder.Resolve(move)
+	if stateHolder.IsPending() {
+		return nil
+	}
 	for {
-		fmt.Println("TryResolveMove 7")
+		if len(g.StateStack) == 0 {
+			// Game end
+			return
+		}
 		stateHolder = g.peekStateHolder()
 		if stateHolder.IsPending() {
 			return nil
 		} else {
-			stateHolder.Resolve(nil)
 			g.popStateHolder()
 		}
 	}

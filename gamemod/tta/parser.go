@@ -40,9 +40,9 @@ func getIthHandCardSchool(game *TtaGame, index int) *CardSchool {
 	return game.cardSchools[card.schoolId]
 }
 
-func toAttachment(game *TtaGame, splitted []string) interface{} {
+func toAttachment(game *TtaGame, start int, splitted []string) []int {
 	result := make([]int, 0)
-	for i := 2; i < len(splitted); i++ {
+	for i := start; i < len(splitted); i++ {
 		r, err := strconv.Atoi(splitted[i])
 		if err != nil {
 			return nil
@@ -50,11 +50,7 @@ func toAttachment(game *TtaGame, splitted []string) interface{} {
 		result = append(result, r)
 	}
 
-	if len(result) == 1 {
-		return result[0]
-	} else {
-		return result
-	}
+	return result
 }
 
 func toPlayAttachment(game *TtaGame, splitted []string) []int {
@@ -192,10 +188,15 @@ func parseCommand(game *TtaGame, command string) {
 			}
 		}
 	case "incpop", "i":
-		if !game.players[0].canIncreasePop() {
-			fmt.Println("Invalid incpop command")
+		err := game.TryResolveMove(&Move{
+			FromPlayer: 0,
+			MoveType:   CIVIL_INC_POP,
+			Data:       []int{},
+		})
+		if err != nil {
+			fmt.Println(err.Error())
 		} else {
-			game.players[0].increasePop()
+			fmt.Println("OK")
 		}
 	case "build", "b":
 		if len(splitted) < 2 {
@@ -207,11 +208,19 @@ func parseCommand(game *TtaGame, command string) {
 				return
 			}
 			stack, index, ok := cardIdToIndex(game.players[0], cardId)
-			if !ok || !game.players[0].canBuild(stack, index, 0) {
+			if !ok {
 				fmt.Println("Invalid build command")
+				return
+			}
+			err = game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   CIVIL_BUILD,
+				Data:       append([]int{stack, index}),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
 			} else {
 				fmt.Println("OK")
-				game.players[0].build(stack, index, 0)
 			}
 		}
 	case "upgrade", "u":
@@ -242,11 +251,15 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("Invalid upgrade command")
 				return
 			}
-			if !game.players[0].canUpgrade(stack1, index1, index2, 0) {
-				fmt.Println("Invalid build command")
+			err = game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   CIVIL_UPGRADE,
+				Data:       append([]int{stack1, index1, index2}),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
 			} else {
 				fmt.Println("OK")
-				game.players[0].upgrade(stack1, index1, index2, 0)
 			}
 		}
 	case "buildwonder", "bw":
@@ -259,11 +272,15 @@ func parseCommand(game *TtaGame, command string) {
 				return
 			}
 		}
-		if !game.players[0].canBuildWonder(step, 0) {
-			fmt.Println("Invalid buildwonder command")
+		err := game.TryResolveMove(&Move{
+			FromPlayer: 0,
+			MoveType:   CIVIL_BUILD_WONDER,
+			Data:       append([]int{step}),
+		})
+		if err != nil {
+			fmt.Println(err.Error())
 		} else {
 			fmt.Println("OK")
-			game.players[0].buildWonder(step, 0)
 		}
 	case "specialability", "sa":
 		if len(splitted) < 2 {
@@ -271,7 +288,7 @@ func parseCommand(game *TtaGame, command string) {
 		} else {
 			sa, err := strconv.Atoi(splitted[1])
 
-			att := toAttachment(game, splitted)
+			att := toAttachment(game, 2, splitted)
 
 			// Ugly, temporary code
 			if sa == 74 {
@@ -280,13 +297,32 @@ func parseCommand(game *TtaGame, command string) {
 				sa = 5
 			}
 
-			if err != nil ||
-				!game.players[0].canUseCivilSpecialAbility(sa, att) {
-				fmt.Println("Invliad specialability command ", err)
-				fmt.Println("Invliad specialability command ", game.players[0].canPlayHand(sa, att))
+			err = game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   CIVIL_SPECIAL_ABILITY,
+				Data:       append([]int{sa}, att...),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
 			} else {
 				fmt.Println("OK")
-				game.players[0].useCivilSpecialAbility(sa, att)
+			}
+		}
+	case "discardmili", "dm":
+		if len(splitted) < 2 {
+			fmt.Println("Unknown command")
+		} else {
+			att := toAttachment(game, 1, splitted)
+
+			err := game.TryResolveMove(&Move{
+				FromPlayer: 0,
+				MoveType:   DISCARD_MILITARY_CARDS,
+				Data:       att,
+			})
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println("OK")
 			}
 		}
 	default:

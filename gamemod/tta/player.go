@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 const (
@@ -234,6 +235,11 @@ func (p *PlayerBoard) getMaxCivilHandSize() int {
 		handSize += 1
 	}
 	return handSize
+}
+
+func (p *PlayerBoard) getMilitaryHandSize() int {
+	csm := p.game.cardStackManager
+	return csm.getStackSize(p.stacks[MILI_HAND])
 }
 
 func (p *PlayerBoard) getMaxMilitaryHandSize() int {
@@ -2364,11 +2370,44 @@ func (p *PlayerBoard) drawMiliCards(count int) {
 	for i := 0; i < count; i++ {
 		csm.processRequest(&MoveCardRequest{
 			sourcePosition: CardPosition{
-				stackId:  p.game.miliDecks[1],
+				stackId:  p.game.miliDecks[p.game.getCurrentAge()],
 				position: 0,
 			},
 			targetPosition: CardPosition{
 				stackId:  p.stacks[MILI_HAND],
+				position: 0,
+			},
+		})
+	}
+}
+
+func (p *PlayerBoard) canDiscardMiliCards(indexes []int) bool {
+	dupMap := make(map[int]bool)
+	for _, index := range indexes {
+		if _, ok := dupMap[index]; ok {
+			return false
+		} else {
+			dupMap[index] = true
+		}
+
+		if index < 0 || index >= p.getMilitaryHandSize() {
+			return false
+		}
+	}
+	return true
+}
+
+func (p *PlayerBoard) discardMiliCards(indexes []int) {
+	csm := p.game.cardStackManager
+	sort.Sort(sort.Reverse(sort.IntSlice(indexes)))
+	for _, index := range indexes {
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.stacks[MILI_HAND],
+				position: index,
+			},
+			targetPosition: CardPosition{
+				stackId:  p.game.miliDiscardDecks[p.game.getCurrentAge()],
 				position: 0,
 			},
 		})

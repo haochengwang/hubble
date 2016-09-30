@@ -11,8 +11,8 @@ type BaseStateHolder struct {
 }
 
 type CivilStateHolder struct {
-	BaseStateHolder
-	end bool
+	base BaseStateHolder
+	end  bool
 }
 
 func (h *CivilStateHolder) IsPending() bool {
@@ -21,10 +21,10 @@ func (h *CivilStateHolder) IsPending() bool {
 
 func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
 	move := m.(*Move)
-	if move.FromPlayer != h.game.CurrentPlayer {
+	if move.FromPlayer != h.base.game.CurrentPlayer {
 		return false, "Not current player."
 	}
-	p := h.game.players[h.game.CurrentPlayer]
+	p := h.base.game.players[h.base.game.CurrentPlayer]
 	switch move.MoveType {
 	case CIVIL_FETCH_CARD:
 		if len(move.Data) != 1 {
@@ -111,7 +111,7 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 		return
 	}
 	move := m.(*Move)
-	p := h.game.players[h.game.CurrentPlayer]
+	p := h.base.game.players[h.base.game.CurrentPlayer]
 	switch move.MoveType {
 	case CIVIL_FETCH_CARD:
 		index := move.Data[0]
@@ -154,18 +154,43 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 }
 
 type DiscardMilitaryCardStateHolder struct {
-	BaseStateHolder
+	base      BaseStateHolder
 	player    int
+	toMaxHand bool
 	toDiscard int
 }
 
+func (h *DiscardMilitaryCardStateHolder) toDiscardMax() int {
+	if h.toMaxHand {
+		p := h.base.game.players[h.player]
+		return p.getMilitaryHandSize() - p.getMaxMilitaryHandSize()
+	} else {
+		return h.toDiscard
+	}
+}
+
 func (h *DiscardMilitaryCardStateHolder) IsPending() bool {
-	return h.toDiscard > 0
+	return h.toDiscardMax() > 0
 }
 
-func (h *DiscardMilitaryCardStateHolder) IsMoveLegal(move interface{}) (legal bool, reason string) {
-	return false, ""
+func (h *DiscardMilitaryCardStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	if m == nil {
+		return
+	}
+	move := m.(*Move)
+	if len(move.Data) > h.toDiscardMax() {
+		return false, "Too many cards."
+	}
+
+	p := h.base.game.players[h.player]
+	return p.canDiscardMiliCards(move.Data), "Invalid card indexes or size."
 }
 
-func (h *DiscardMilitaryCardStateHolder) Resolve(move interface{}) {
+func (h *DiscardMilitaryCardStateHolder) Resolve(m interface{}) {
+	if m == nil {
+		return
+	}
+	move := m.(*Move)
+	p := h.base.game.players[h.player]
+	p.discardMiliCards(move.Data)
 }

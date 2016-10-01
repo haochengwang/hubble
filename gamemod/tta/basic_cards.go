@@ -1049,7 +1049,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 
 	// Actions
 	schools = append(schools, &CardSchool{
-		schoolName: "Breakthrough - Age I",
+		schoolName: "Breakthrough",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_BREAKTHROUGH},
@@ -1057,7 +1057,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Breakthrough - Age II",
+		schoolName: "Breakthrough",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_BREAKTHROUGH},
@@ -1065,21 +1065,21 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Cultural Heritage - Age A",
+		schoolName: "Cultural Heritage",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_CULTURAL_HERITAGE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Cultural Heritage - Age I",
+		schoolName: "Cultural Heritage",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_CULTURAL_HERITAGE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Efficient Upgrade - Age II",
+		schoolName: "Efficient Upgrade",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_EFFICIENT_UPGRADE},
@@ -1087,7 +1087,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Efficient Upgrade - Age III",
+		schoolName: "Efficient Upgrade",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_EFFICIENT_UPGRADE},
@@ -1102,7 +1102,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Engineering Genius - Age A",
+		schoolName: "Engineering Genius",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_ENGINEERING_GENIUS},
@@ -1110,7 +1110,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Engineering Genius - Age I",
+		schoolName: "Engineering Genius",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_ENGINEERING_GENIUS},
@@ -1118,7 +1118,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Engineering Genius - Age II",
+		schoolName: "Engineering Genius",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_ENGINEERING_GENIUS},
@@ -1126,7 +1126,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Engineering Genius - Age III",
+		schoolName: "Engineering Genius",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_ENGINEERING_GENIUS},
@@ -1134,7 +1134,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Frugality - Age A",
+		schoolName: "Frugality",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_FRUGALITY},
@@ -1142,7 +1142,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Frugality - Age I",
+		schoolName: "Frugality",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_FRUGALITY},
@@ -1150,7 +1150,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Frugality - Age II",
+		schoolName: "Frugality",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_FRUGALITY},
@@ -1165,7 +1165,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Patriotism - Age A",
+		schoolName: "Patriotism",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_PATRIOTISM},
@@ -1173,7 +1173,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Patriotism - Age I",
+		schoolName: "Patriotism",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_PATRIOTISM},
@@ -1181,7 +1181,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Patriotism - Age II",
+		schoolName: "Patriotism",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_PATRIOTISM},
@@ -1189,7 +1189,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Patriotism - Age III",
+		schoolName: "Patriotism",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_PATRIOTISM},
@@ -1197,7 +1197,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Reserves - Age I",
+		schoolName: "Reserves",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RESERVES},
@@ -1205,7 +1205,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Reserves - Age II",
+		schoolName: "Reserves",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RESERVES},
@@ -1213,7 +1213,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Reserves - Age III",
+		schoolName: "Reserves",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RESERVES},
@@ -1221,7 +1221,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{3, 3, 3},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Revolutionary Idea - Age II",
+		schoolName: "Revolutionary Idea",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_REVOLUTIONARY_IDEA},
@@ -1229,7 +1229,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Revolutionary Idea - Age III",
+		schoolName: "Revolutionary Idea",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_REVOLUTIONARY_IDEA},
@@ -1237,7 +1237,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Rich Land - Age A",
+		schoolName: "Rich Land",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RICH_LAND},
@@ -1245,7 +1245,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Rich Land - Age I",
+		schoolName: "Rich Land",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RICH_LAND},
@@ -1253,7 +1253,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Rich Land - Age II",
+		schoolName: "Rich Land",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_RICH_LAND},
@@ -1268,7 +1268,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Urban Growth - Age A",
+		schoolName: "Urban Growth",
 		age:        0,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_URBAN_GROWTH},
@@ -1276,7 +1276,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Urban Growth - Age I",
+		schoolName: "Urban Growth",
 		age:        1,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_URBAN_GROWTH},
@@ -1284,7 +1284,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Urban Growth - Age II",
+		schoolName: "Urban Growth",
 		age:        2,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_URBAN_GROWTH},
@@ -1292,7 +1292,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:  []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName: "Urban Growth - Age III",
+		schoolName: "Urban Growth",
 		age:        3,
 		cardTypes: []CardType{CARDTYPE_ACTION,
 			CARDTYPE_ACTION_URBAN_GROWTH},
@@ -1336,14 +1336,14 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:     []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Plunder - Age I",
+		schoolName:     "Plunder",
 		age:            1,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
 		cardCounts:     []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Raid - Age I",
+		schoolName:     "Raid",
 		age:            1,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
@@ -1364,14 +1364,14 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:     []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Plunder - Age II",
+		schoolName:     "PlunderI",
 		age:            2,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
 		cardCounts:     []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Raid - Age II",
+		schoolName:     "RaidI",
 		age:            2,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 2,
@@ -1392,14 +1392,14 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardCounts:     []int{4, 4, 4},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Plunder - Age III",
+		schoolName:     "PlunderII",
 		age:            3,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
 		cardCounts:     []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
-		schoolName:     "Raid - Age III",
+		schoolName:     "RaidII",
 		age:            3,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 3,

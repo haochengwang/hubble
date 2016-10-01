@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type StateHolder interface {
 	IsPending() bool
 	IsMoveLegal(move interface{}) (legal bool, reason string)
@@ -23,11 +27,16 @@ func (h *TurnStartStateHolder) IsMoveLegal(move interface{}) (legal bool, reason
 }
 
 func (h *TurnStartStateHolder) Resolve(move interface{}) {
+	fmt.Println("TurnStartStateHolder.Resolve")
 	g := h.base.game
 	// Only rotate the wheel when age is not A
-	if g.getCurrentAge() > 0 {
+	if g.RoundCount > 0 {
 		g.weedOut(3)
 		g.refillWheels()
+	}
+
+	if g.RoundCount > 0 && g.CurrentPlayer == 0 {
+		g.banishAgeACards()
 	}
 
 	g.popStateHolder()
@@ -60,6 +69,11 @@ func (h *TurnStartStateHolder) Resolve(move interface{}) {
 			game: g,
 		},
 	})
+	g.pushStateHolder(&PoliticalStateHolder{
+		base: BaseStateHolder{
+			game: g,
+		},
+	})
 }
 
 type TurnEndStateHolder struct {
@@ -75,6 +89,7 @@ func (h *TurnEndStateHolder) IsMoveLegal(move interface{}) (legal bool, reason s
 }
 
 func (h *TurnEndStateHolder) Resolve(move interface{}) {
+	fmt.Println("TurnEndStateHolder.Resolve")
 	g := h.base.game
 	p := g.players[g.CurrentPlayer]
 	p.refillWhiteRedTokens()
@@ -82,9 +97,8 @@ func (h *TurnEndStateHolder) Resolve(move interface{}) {
 	g.CurrentPlayer += 1
 	if g.CurrentPlayer >= g.options.PlayerCount {
 		g.CurrentPlayer = 0
-		if g.getCurrentAge() == 0 {
-			g.banishAgeACards()
-		}
+		g.RoundCount++
+		fmt.Println(g.RoundCount)
 	}
 
 	g.popStateHolder()
@@ -97,11 +111,10 @@ func (h *TurnEndStateHolder) Resolve(move interface{}) {
 
 type CivilStateHolder struct {
 	base BaseStateHolder
-	end  bool
 }
 
 func (h *CivilStateHolder) IsPending() bool {
-	return !h.end
+	return true
 }
 
 func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
@@ -111,12 +124,12 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 	}
 	p := h.base.game.players[h.base.game.CurrentPlayer]
 	if h.base.game.getCurrentAge() == 0 { // Age A only fetch allowed
-		if move.MoveType != CIVIL_FETCH_CARD && move.MoveType != CIVIL_END {
+		if move.MoveType != MOVE_FETCH_CARD && move.MoveType != MOVE_END {
 			return false, "Only fetch card is allowed in first round"
 		}
 	}
 	switch move.MoveType {
-	case CIVIL_FETCH_CARD:
+	case MOVE_FETCH_CARD:
 		if len(move.Data) != 1 {
 			return false, "Invalid fetch command."
 		}
@@ -125,7 +138,7 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid fetch command."
 		}
 		return true, ""
-	case CIVIL_PLAY_CARD:
+	case MOVE_PLAY_CIVIL_CARD:
 		if len(move.Data) < 1 {
 			return false, "Invalid play command."
 		}
@@ -140,12 +153,12 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid play command"
 		}
 		return true, ""
-	case CIVIL_INC_POP:
+	case MOVE_INC_POP:
 		if !p.canIncreasePop() {
 			return false, "Invalid incpop command"
 		}
 		return true, ""
-	case CIVIL_BUILD:
+	case MOVE_BUILD:
 		if len(move.Data) < 2 {
 			return false, "Invalid build command."
 		}
@@ -155,7 +168,7 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid build command"
 		}
 		return true, ""
-	case CIVIL_BUILD_WONDER:
+	case MOVE_BUILD_WONDER:
 		if len(move.Data) < 1 {
 			return false, "Invalid buildwonder command."
 		}
@@ -164,7 +177,7 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid buildwonder command"
 		}
 		return true, ""
-	case CIVIL_UPGRADE:
+	case MOVE_UPGRADE:
 		if len(move.Data) < 3 {
 			return false, "Invalid upgrade command."
 		}
@@ -175,7 +188,7 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid upgrade command"
 		}
 		return true, ""
-	case CIVIL_SPECIAL_ABILITY:
+	case MOVE_SPECIAL_ABILITY:
 		if len(move.Data) < 1 {
 			return false, "Invalid specialability command."
 		}
@@ -190,23 +203,24 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid specialability command"
 		}
 		return true, ""
-	case CIVIL_END:
+	case MOVE_END:
 		return true, ""
 	}
 	return false, "Unknown command"
 }
 
 func (h *CivilStateHolder) Resolve(m interface{}) {
+	fmt.Println("CivilStateHolder.Resolve")
 	if m == nil {
 		return
 	}
 	move := m.(*Move)
 	p := h.base.game.players[h.base.game.CurrentPlayer]
 	switch move.MoveType {
-	case CIVIL_FETCH_CARD:
+	case MOVE_FETCH_CARD:
 		index := move.Data[0]
 		p.takeCardFromWheel(index)
-	case CIVIL_PLAY_CARD:
+	case MOVE_PLAY_CIVIL_CARD:
 		index := move.Data[0]
 		var attachment interface{}
 		if len(move.Data) > 1 {
@@ -215,21 +229,21 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 			attachment = nil
 		}
 		p.playHand(index, attachment)
-	case CIVIL_INC_POP:
+	case MOVE_INC_POP:
 		p.increasePop()
-	case CIVIL_BUILD:
+	case MOVE_BUILD:
 		stack := move.Data[0]
 		index := move.Data[1]
 		p.build(stack, index, 0)
-	case CIVIL_BUILD_WONDER:
+	case MOVE_BUILD_WONDER:
 		step := move.Data[0]
 		p.buildWonder(step, 0)
-	case CIVIL_UPGRADE:
+	case MOVE_UPGRADE:
 		stack := move.Data[0]
 		index1 := move.Data[1]
 		index2 := move.Data[2]
 		p.upgrade(stack, index1, index2, 0)
-	case CIVIL_SPECIAL_ABILITY:
+	case MOVE_SPECIAL_ABILITY:
 		sa := move.Data[0]
 		var attachment interface{}
 		if len(move.Data) > 1 {
@@ -238,8 +252,66 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 			attachment = nil
 		}
 		p.useCivilSpecialAbility(sa, attachment)
-	case CIVIL_END:
+	case MOVE_END:
 		h.base.game.popStateHolder()
+	}
+}
+
+type PoliticalStateHolder struct {
+	base BaseStateHolder
+}
+
+func (h *PoliticalStateHolder) IsPending() bool {
+	return h.base.game.getCurrentAge() != 0
+}
+
+func (h *PoliticalStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	move := m.(*Move)
+	if move.FromPlayer != h.base.game.CurrentPlayer {
+		return false, "Not current player."
+	}
+	p := h.base.game.players[h.base.game.CurrentPlayer]
+	switch move.MoveType {
+	case MOVE_PLAY_MILITARY_CARD:
+		if len(move.Data) < 1 {
+			return false, "Invalid playmilitary command."
+		}
+		index := move.Data[0]
+		var attachment interface{}
+		if len(move.Data) > 1 {
+			attachment = move.Data[1:]
+		} else {
+			attachment = nil
+		}
+		if !p.politicalPlayMilitaryHandLegal(index, attachment) {
+			return false, "Invalid playmilitary command"
+		}
+		return true, ""
+	case MOVE_END:
+		return true, ""
+	}
+	return false, "Unknown command"
+}
+
+func (h *PoliticalStateHolder) Resolve(m interface{}) {
+	fmt.Println("PoliticalStateHolder.Resolve")
+	h.base.game.popStateHolder()
+	if m == nil {
+		return
+	}
+	move := m.(*Move)
+	p := h.base.game.players[h.base.game.CurrentPlayer]
+	switch move.MoveType {
+	case MOVE_PLAY_MILITARY_CARD:
+		index := move.Data[0]
+		var attachment interface{}
+		if len(move.Data) > 1 {
+			attachment = move.Data[1:]
+		} else {
+			attachment = nil
+		}
+		p.politicalPlayMilitaryHand(index, attachment)
+	case MOVE_END:
 	}
 }
 
@@ -256,6 +328,7 @@ func (h *ProductionPhaseStateHolder) IsMoveLegal(m interface{}) (legal bool, rea
 }
 
 func (h *ProductionPhaseStateHolder) Resolve(m interface{}) {
+	fmt.Println("ProductionPhaseStateHolder.Resolve")
 	p := h.base.game.players[h.base.game.CurrentPlayer]
 	p.doProductionPhase()
 	h.base.game.popStateHolder()
@@ -269,6 +342,7 @@ type DiscardMilitaryCardsStateHolder struct {
 }
 
 func (h *DiscardMilitaryCardsStateHolder) toDiscardMax() int {
+	fmt.Println("DiscardMilitaryCardsStateHolder.Resolve")
 	if h.toMaxHand {
 		p := h.base.game.players[h.player]
 		return p.getMilitaryHandSize() - p.getMaxMilitaryHandSize()
@@ -341,7 +415,32 @@ func (h *DrawMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool, r
 }
 
 func (h *DrawMilitaryCardsStateHolder) Resolve(m interface{}) {
+	fmt.Println("DrawMilitaryCardsStateHolder.Resolve")
 	p := h.base.game.players[h.player]
 	p.drawMiliCards(h.drawCount())
 	h.base.game.popStateHolder()
+}
+
+type DefenseAggressionStateHolder struct {
+	base         BaseStateHolder
+	sourcePlayer int
+	sourcePower  int
+	player       int
+}
+
+func (h *DefenseAggressionStateHolder) IsPending() bool {
+	return true
+}
+
+func (h *DefenseAggressionStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	if m == nil {
+		return
+	}
+	move := m.(*Move)
+	p := h.base.game.players[h.player]
+	return p.defenseAggressionLegal(move.Data), "Invalid card indexes or size."
+}
+
+func (h *DefenseAggressionStateHolder) Resolve(m interface{}) {
+	fmt.Println("DrawMilitaryCardsStateHolder.Resolve")
 }

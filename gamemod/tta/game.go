@@ -29,15 +29,16 @@ type PendingAction struct {
 type MoveType int
 
 const (
-	CIVIL_FETCH_CARD MoveType = iota
-	CIVIL_PLAY_CARD
-	CIVIL_INC_POP
-	CIVIL_BUILD
-	CIVIL_BUILD_WONDER
-	CIVIL_UPGRADE
-	CIVIL_SPECIAL_ABILITY
-	CIVIL_END
-	DISCARD_MILITARY_CARDS
+	MOVE_FETCH_CARD MoveType = iota
+	MOVE_PLAY_CIVIL_CARD
+	MOVE_PLAY_MILITARY_CARD
+	MOVE_INC_POP
+	MOVE_BUILD
+	MOVE_BUILD_WONDER
+	MOVE_UPGRADE
+	MOVE_SPECIAL_ABILITY
+	MOVE_END
+	MOVE_DISCARD_MILITARY_CARDS
 	CHOOSE_YELLOW
 	CHOOSE_BLUE
 )
@@ -72,6 +73,7 @@ type TtaGame struct {
 
 	// Pending action
 	CurrentPlayer int
+	RoundCount    int
 	StateStack    []StateHolder
 }
 
@@ -91,6 +93,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 		players:            make([]*PlayerBoard, 2),
 
 		CurrentPlayer: 0,
+		RoundCount:    0,
 		StateStack:    make([]StateHolder, 0),
 	}
 	game.cardSchools = InitBasicCardSchools()
@@ -122,7 +125,7 @@ func NewTta(options *TtaGameOptions) (result *TtaGame) {
 			},
 		},
 	}
-	game.StateStack[0].Resolve(nil)
+	game.Initialize()
 	return game
 }
 
@@ -240,13 +243,37 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			})
 		}
 	}
+
+	for i := 0; i < options.PlayerCount+2; i++ {
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  g.miliDecks[0],
+				position: csm.getStackSize(g.miliDecks[0]) - 1,
+			},
+			targetPosition: CardPosition{
+				stackId:  g.nowEventsDeck,
+				position: i,
+			},
+		})
+	}
+	g.banishAgeAMilitaryCards()
 }
 
 func (g *TtaGame) banishAgeACards() {
+	fmt.Println("TtaGame.banishAgeACards")
 	csm := g.cardStackManager
 
 	csm.processRequest(&BanishAllCardsInStackRequest{
 		stackId: g.ageStacks[0],
+	})
+}
+
+func (g *TtaGame) banishAgeAMilitaryCards() {
+	fmt.Println("TtaGame.banishAgeAMilitaryCards")
+	csm := g.cardStackManager
+
+	csm.processRequest(&BanishAllCardsInStackRequest{
+		stackId: g.miliDecks[0],
 	})
 }
 
@@ -306,6 +333,53 @@ func (g *TtaGame) refillWheels() {
 	}
 }
 
+func (g *TtaGame) nextEventHappen() {
+	csm := g.cardStackManager
+	csm.processRequest(&MoveCardRequest{
+		sourcePosition: CardPosition{
+			stackId:  g.nowEventsDeck,
+			position: csm.getStackSize(g.nowEventsDeck) - 1,
+		},
+		targetPosition: CardPosition{
+			stackId:  g.pastEventsDeck,
+			position: 0,
+		},
+	})
+
+	if csm.getStackSize(g.nowEventsDeck) <= 0 {
+		// Move future events to now
+		for {
+			if csm.getStackSize(g.futureEventsDeck) <= 0 {
+				return
+			}
+			csm.processRequest(&SwapCardRequest{
+				sourcePosition: CardPosition{
+					stackId:  g.futureEventsDeck,
+					position: 0,
+				},
+				targetPosition: CardPosition{
+					stackId:  g.nowEventsDeck,
+					position: 0,
+				},
+			})
+		}
+		cardCount := csm.getStackSize(g.nowEventsDeck)
+		randomPerm := rand.Perm(cardCount)
+		for i := 0; i < cardCount; i++ {
+			csm.processRequest(&SwapCardRequest{
+				sourcePosition: CardPosition{
+					stackId:  g.nowEventsDeck,
+					position: i,
+				},
+				targetPosition: CardPosition{
+					stackId:  g.nowEventsDeck,
+					position: randomPerm[i],
+				},
+			})
+		}
+	}
+}
+
 func (g *TtaGame) getCardOnGreatWheel(index int) *Card {
 	if index < 0 || index >= 13 {
 		return nil
@@ -344,7 +418,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 	}
 	p := g.players[g.CurrentPlayer]
 	switch move.MoveType {
-	case CIVIL_FETCH_CARD:
+	case MOVE_FETCH_CARD:
 		if len(move.Data) != 1 {
 			return fmt.Errorf("Invalid fetch command.")
 		}
@@ -353,7 +427,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid fetch command.")
 		}
 		p.takeCardFromWheel(index)
-	case CIVIL_PLAY_CARD:
+	case MOVE_PLAY_CIVIL_CARD:
 		if len(move.Data) < 1 {
 			return fmt.Errorf("Invalid play command.")
 		}
@@ -368,12 +442,12 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid play command")
 		}
 		p.playHand(index, attachment)
-	case CIVIL_INC_POP:
+	case MOVE_INC_POP:
 		if !p.canIncreasePop() {
 			return fmt.Errorf("Invalid incpop command")
 		}
 		p.increasePop()
-	case CIVIL_BUILD:
+	case MOVE_BUILD:
 		if len(move.Data) < 2 {
 			return fmt.Errorf("Invalid build command.")
 		}
@@ -383,7 +457,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid build command")
 		}
 		p.build(stack, index, 0)
-	case CIVIL_BUILD_WONDER:
+	case MOVE_BUILD_WONDER:
 		if len(move.Data) < 1 {
 			return fmt.Errorf("Invalid buildwonder command.")
 		}
@@ -392,7 +466,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid buildwonder command")
 		}
 		p.buildWonder(step, 0)
-	case CIVIL_UPGRADE:
+	case MOVE_UPGRADE:
 		if len(move.Data) < 3 {
 			return fmt.Errorf("Invalid upgrade command.")
 		}
@@ -403,7 +477,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid upgrade command")
 		}
 		p.upgrade(stack, index1, index2, 0)
-	case CIVIL_SPECIAL_ABILITY:
+	case MOVE_SPECIAL_ABILITY:
 		if len(move.Data) < 1 {
 			return fmt.Errorf("Invalid specialability command.")
 		}
@@ -418,7 +492,7 @@ func (g *TtaGame) processCivilMove(move *Move) (err error) {
 			return fmt.Errorf("Invalid specialability command")
 		}
 		p.useCivilSpecialAbility(sa, attachment)
-	case CIVIL_END:
+	case MOVE_END:
 	}
 	return nil
 }
@@ -428,19 +502,28 @@ func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {
 }
 
 func (g *TtaGame) pushStateHolder(stateHolder StateHolder) {
-	fmt.Println("push ", stateHolder)
 	g.StateStack = append(g.StateStack, stateHolder)
 }
 
 func (g *TtaGame) popStateHolder() StateHolder {
 	result := g.StateStack[len(g.StateStack)-1]
-	fmt.Println("pop ", result)
 	g.StateStack = g.StateStack[:len(g.StateStack)-1]
 	return result
 }
 
 func (g *TtaGame) peekStateHolder() StateHolder {
 	return g.StateStack[len(g.StateStack)-1]
+}
+
+func (g *TtaGame) Initialize() (err error) {
+	for {
+		stateHolder := g.peekStateHolder()
+		if stateHolder.IsPending() {
+			return
+		} else {
+			stateHolder.Resolve(nil)
+		}
+	}
 }
 
 func (g *TtaGame) TryResolveMove(move *Move) (err error) {
@@ -453,7 +536,6 @@ func (g *TtaGame) TryResolveMove(move *Move) (err error) {
 		panic(stateHolder)
 	}
 	if legal, reason := stateHolder.IsMoveLegal(move); !legal {
-
 		return fmt.Errorf(reason)
 	}
 

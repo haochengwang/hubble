@@ -28,6 +28,7 @@ const (
 	TACTIC
 	PACT
 	WAR
+	PENDING
 	HAND
 	MILI_HAND
 	USER_STACK_SIZE
@@ -2626,4 +2627,106 @@ func (p *PlayerBoard) discardMiliCards(indexes []int) {
 			},
 		})
 	}
+}
+
+func (p *PlayerBoard) politicalPlayMilitaryHandLegal(index int, attachment interface{}) bool {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= p.getMilitaryHandSize() {
+		return false
+	}
+
+	card := csm.cardStacks[p.stacks[MILI_HAND]][index]
+	school := p.game.cardSchools[card.schoolId]
+	if school.hasType(CARDTYPE_EVENT) ||
+		school.hasType(CARDTYPE_TERRITORY) {
+		return true
+	} else if school.hasType(CARDTYPE_AGGRESSION) {
+		target := attachmentAsInt(attachment, -1)
+		if target < 0 || target >= p.game.options.PlayerCount {
+			fmt.Println("politicalPlayMilitaryHandLegal invalid player:", target)
+			return false
+		}
+		if target == p.game.CurrentPlayer {
+			fmt.Println("politicalPlayMilitaryHandLegal cannot target current player")
+			return false
+		}
+
+		target_power := p.game.players[target].calcPower()
+		fmt.Println(target_power)
+		fmt.Println(p.calcPower())
+		if target_power >= p.calcPower() {
+			return false
+		}
+		return true
+	} else if school.hasType(CARDTYPE_PACT) {
+		target := attachmentAsInt(attachment, -1)
+		if target < 0 || target >= p.game.options.PlayerCount {
+			return false
+		}
+		if target == p.game.CurrentPlayer {
+			return false
+		}
+		return true
+	}
+	return false
+}
+
+func (p *PlayerBoard) politicalPlayMilitaryHand(index int, attachment interface{}) {
+	csm := p.game.cardStackManager
+	card := csm.cardStacks[p.stacks[MILI_HAND]][index]
+	school := p.game.cardSchools[card.schoolId]
+	if school.hasType(CARDTYPE_EVENT) ||
+		school.hasType(CARDTYPE_TERRITORY) {
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.stacks[MILI_HAND],
+				position: index,
+			},
+			targetPosition: CardPosition{
+				stackId:  p.game.futureEventsDeck,
+				position: csm.getStackSize(p.game.futureEventsDeck),
+			},
+		})
+		p.game.nextEventHappen()
+	} else if school.hasType(CARDTYPE_AGGRESSION) {
+		target := attachmentAsInt(attachment, -1)
+		targetPlayer := p.game.players[target]
+
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.stacks[MILI_HAND],
+				position: index,
+			},
+			targetPosition: CardPosition{
+				stackId:  targetPlayer.stacks[PENDING],
+				position: 0,
+			},
+		})
+	}
+}
+
+func (p *PlayerBoard) defenseAggressionLegal(indexes []int) bool {
+	if len(indexes) > p.calcRedTokenLimit() {
+		fmt.Println("defenseAggressionLegal too many cards")
+		return false
+	}
+	dupMap := make(map[int]bool)
+	for _, index := range indexes {
+		if _, ok := dupMap[index]; ok {
+			fmt.Println("defenseAggressionLegal duplicate index")
+			return false
+		} else {
+			dupMap[index] = true
+		}
+
+		if index < 0 || index >= p.getMilitaryHandSize() {
+			fmt.Println("defenseAggressionLegal invalid index")
+			return false
+		}
+	}
+	return true
+}
+
+func (p *PlayerBoard) defenseAggression(indexes []int) {
+	p.discardMiliCards(indexes)
 }

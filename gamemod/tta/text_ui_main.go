@@ -28,11 +28,11 @@ func toStrings(runes [][]rune) (result []string) {
 func ageToString(age int) string {
 	switch age {
 	case 0:
-		return "A"
+		return " A "
 	case 1:
-		return "I"
+		return " I "
 	case 2:
-		return "II"
+		return "II "
 	case 3:
 		return "III"
 	}
@@ -328,7 +328,8 @@ func paintHands(player *PlayerBoard) ([][]rune, int) {
 		need = true
 		handSchool := player.game.cardSchools[handCard.schoolId]
 		result = printUpon(result,
-			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
+			toRunes([]string{"[" + ageToString(handSchool.age) +
+				strconv.Itoa(handSchool.schoolId) + "] " +
 				handSchool.schoolName}), 15, h)
 		h += 1
 	}
@@ -336,7 +337,8 @@ func paintHands(player *PlayerBoard) ([][]rune, int) {
 		need = true
 		handSchool := player.game.cardSchools[handCard.schoolId]
 		result = printUpon(result,
-			toRunes([]string{"[" + strconv.Itoa(handSchool.schoolId) + "] " +
+			toRunes([]string{"[" + ageToString(handSchool.age) +
+				strconv.Itoa(handSchool.schoolId) + "] " +
 				handSchool.schoolName}), 15, h)
 		h += 1
 	}
@@ -373,7 +375,7 @@ func paintCardOnWheel(index, age, id int, name string) ([][]rune, int) {
 		costStr = "***"
 	}
 	result := printUpon(toRunes(backGround),
-		toRunes([]string{strconv.Itoa(index)}), 1, 0)
+		toRunes([]string{strconv.Itoa(index - 1)}), 1, 0)
 	result = printUpon(result,
 		toRunes([]string{costStr}), 4, 0)
 	result = printUpon(result,
@@ -465,6 +467,46 @@ func paintStructures(game *TtaGame, player *PlayerBoard) ([][]rune, int) {
 	return result, maxDepth*4 + 1
 }
 
+func paintEventDecks(game *TtaGame) ([][]rune, int) {
+	csm := game.cardStackManager
+	backGround := []string{
+		"+------+    +------+",
+		"|      | -> |      |",
+		"+------+    +------+",
+		"+------------------+",
+		"|                  |",
+		"+------------------+",
+	}
+	result := toRunes(backGround)
+	if csm.getStackSize(game.futureEventsDeck) > 0 {
+		eventCard := csm.getFirstCard(game.futureEventsDeck)
+		eventSchool := game.cardSchools[eventCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{ageToString(eventSchool.age)}), 1, 1)
+		result = printUpon(result, toRunes([]string{strconv.Itoa(
+			csm.getStackSize(game.futureEventsDeck))}), 5, 1)
+	}
+
+	if csm.getStackSize(game.nowEventsDeck) > 0 {
+		eventCard := csm.getFirstCard(game.nowEventsDeck)
+		eventSchool := game.cardSchools[eventCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{ageToString(eventSchool.age)}), 13, 1)
+		result = printUpon(result, toRunes([]string{strconv.Itoa(
+			csm.getStackSize(game.nowEventsDeck))}), 17, 1)
+	}
+
+	if csm.getStackSize(game.pastEventsDeck) > 0 {
+		eventCard := csm.getFirstCard(game.pastEventsDeck)
+		eventSchool := game.cardSchools[eventCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + ageToString(eventSchool.age) +
+				strconv.Itoa(eventSchool.schoolId) + "]" +
+				eventSchool.schoolName}), 1, 4)
+	}
+	return result, len(result)
+}
+
 func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
 	csm := game.cardStackManager
 	schools := InitBasicCardSchools()
@@ -482,7 +524,10 @@ func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
 		}
 
 	}
-	return result, 1
+
+	events, _ := paintEventDecks(game)
+	result = printUpon(result, events, 40, 0)
+	return result, len(result)
 }
 
 func PrintAll(str []string) {
@@ -533,7 +578,9 @@ func PrintCurrentState(game *TtaGame) {
 	case *CivilStateHolder:
 		fmt.Println("[PENDING]Waiting for player ", game.CurrentPlayer, " for civil actions")
 	case *DiscardMilitaryCardsStateHolder:
-		fmt.Println("[PENDING]Waiting for player %v for discard military cards", h.player)
+		fmt.Println("[PENDING]Waiting for player", h.player, "for discarding military cards")
+	case *PoliticalStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", game.CurrentPlayer, " for political actions")
 	default:
 		fmt.Println(h)
 	}

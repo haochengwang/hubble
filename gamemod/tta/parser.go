@@ -159,7 +159,7 @@ func parseCommand(game *TtaGame, command string) {
 		fmt.Println("OK")
 		game.TryResolveMove(&Move{
 			FromPlayer: cp,
-			MoveType:   CIVIL_END,
+			MoveType:   MOVE_END,
 		})
 		/*game.players[0].doProductionPhase()
 		game.players[0].clearupTurn()
@@ -173,7 +173,7 @@ func parseCommand(game *TtaGame, command string) {
 			index, err := strconv.Atoi(splitted[1])
 			err = game.TryResolveMove(&Move{
 				FromPlayer: cp,
-				MoveType:   CIVIL_FETCH_CARD,
+				MoveType:   MOVE_FETCH_CARD,
 				Data:       []int{index},
 			})
 			if err != nil {
@@ -190,7 +190,24 @@ func parseCommand(game *TtaGame, command string) {
 			att := toPlayAttachment(game, splitted)
 			err = game.TryResolveMove(&Move{
 				FromPlayer: cp,
-				MoveType:   CIVIL_PLAY_CARD,
+				MoveType:   MOVE_PLAY_CIVIL_CARD,
+				Data:       append([]int{index}, att...),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println("OK")
+			}
+		}
+	case "playmili", "pm":
+		if len(splitted) < 2 {
+			fmt.Println("Unknown command")
+		} else {
+			index, err := strconv.Atoi(splitted[1])
+			att := toAttachment(game, 2, splitted)
+			err = game.TryResolveMove(&Move{
+				FromPlayer: cp,
+				MoveType:   MOVE_PLAY_MILITARY_CARD,
 				Data:       append([]int{index}, att...),
 			})
 			if err != nil {
@@ -202,7 +219,7 @@ func parseCommand(game *TtaGame, command string) {
 	case "incpop", "i":
 		err := game.TryResolveMove(&Move{
 			FromPlayer: cp,
-			MoveType:   CIVIL_INC_POP,
+			MoveType:   MOVE_INC_POP,
 			Data:       []int{},
 		})
 		if err != nil {
@@ -226,7 +243,7 @@ func parseCommand(game *TtaGame, command string) {
 			}
 			err = game.TryResolveMove(&Move{
 				FromPlayer: cp,
-				MoveType:   CIVIL_BUILD,
+				MoveType:   MOVE_BUILD,
 				Data:       append([]int{stack, index}),
 			})
 			if err != nil {
@@ -265,7 +282,7 @@ func parseCommand(game *TtaGame, command string) {
 			}
 			err = game.TryResolveMove(&Move{
 				FromPlayer: cp,
-				MoveType:   CIVIL_UPGRADE,
+				MoveType:   MOVE_UPGRADE,
 				Data:       append([]int{stack1, index1, index2}),
 			})
 			if err != nil {
@@ -286,7 +303,7 @@ func parseCommand(game *TtaGame, command string) {
 		}
 		err := game.TryResolveMove(&Move{
 			FromPlayer: cp,
-			MoveType:   CIVIL_BUILD_WONDER,
+			MoveType:   MOVE_BUILD_WONDER,
 			Data:       append([]int{step}),
 		})
 		if err != nil {
@@ -318,8 +335,8 @@ func parseCommand(game *TtaGame, command string) {
 			}
 
 			err = game.TryResolveMove(&Move{
-				FromPlayer: 0,
-				MoveType:   CIVIL_SPECIAL_ABILITY,
+				FromPlayer: cp,
+				MoveType:   MOVE_SPECIAL_ABILITY,
 				Data:       append([]int{sa}, att...),
 			})
 			if err != nil {
@@ -336,7 +353,7 @@ func parseCommand(game *TtaGame, command string) {
 
 			err := game.TryResolveMove(&Move{
 				FromPlayer: cp,
-				MoveType:   DISCARD_MILITARY_CARDS,
+				MoveType:   MOVE_DISCARD_MILITARY_CARDS,
 				Data:       att,
 			})
 			if err != nil {

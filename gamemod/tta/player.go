@@ -293,6 +293,15 @@ func (p *PlayerBoard) getWorkerCount(stack int, index int) int {
 	return p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
 }
 
+func (p *PlayerBoard) getCardSchool(stack int, index int) *CardSchool {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= csm.getStackSize(p.stacks[stack]) {
+		return nil
+	}
+	card := csm.cardStacks[p.stacks[stack]][index]
+	return p.game.cardSchools[card.schoolId]
+}
+
 func (p *PlayerBoard) getTempMilitaryResource() int {
 	return p.specialTokenManager.getTokenCount(MILITARY_RESOURCE_TEMP, TOKEN_BLUE)
 }
@@ -637,6 +646,14 @@ func (p *PlayerBoard) gainTech(gain int) {
 		bankId:     TECH_COUNTER,
 		tokenType:  TOKEN_DEFAULT,
 		tokenCount: gain,
+	})
+}
+
+func (p *PlayerBoard) loseTech(lose int) {
+	p.specialTokenManager.processRequest(&RemoveTokenRequest{
+		bankId:     TECH_COUNTER,
+		tokenType:  TOKEN_DEFAULT,
+		tokenCount: lose,
 	})
 }
 

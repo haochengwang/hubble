@@ -592,10 +592,23 @@ func GetCurrentPendingPlayer(game *TtaGame) int {
 		return -1
 	case *PlunderStateHolder:
 		return game.CurrentPlayer
+	case *RaidStateHolder:
+		return game.CurrentPlayer
 	default:
 		return -1
 	}
 }
+
+func GetCurrentPendingPlayerForPlayAttachment(game *TtaGame) int {
+	stateHolder := game.peekStateHolder()
+	switch h := stateHolder.(type) {
+	case *RaidStateHolder:
+		return h.targetPlayer
+	default:
+		return GetCurrentPendingPlayer(game)
+	}
+}
+
 func PrintCurrentState(game *TtaGame) {
 	stateHolder := game.peekStateHolder()
 	switch h := stateHolder.(type) {
@@ -612,6 +625,8 @@ func PrintCurrentState(game *TtaGame) {
 		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " to choose population to lose[use d command]")
 	case *PlunderStateHolder:
 		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for choosing crop/resource to plunder[use o command]")
+	case *RaidStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for choosing structure of player ", h.targetPlayer, "to destroy[use d command]")
 	default:
 		fmt.Println(h)
 	}

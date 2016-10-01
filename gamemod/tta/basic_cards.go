@@ -1333,7 +1333,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:            1,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 2,
-		cardCounts:     []int{20, 2, 2},
+		cardCounts:     []int{2, 2, 2},
 		traits:         []int{TRAIT_ENSLAVE},
 	})
 	schools = append(schools, &CardSchool{
@@ -1342,7 +1342,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
 		actionBonus:    3,
-		cardCounts:     []int{20, 2, 2},
+		cardCounts:     []int{2, 2, 2},
 		traits:         []int{TRAIT_PLUNDER},
 	})
 	schools = append(schools, &CardSchool{
@@ -1350,7 +1350,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:            1,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
-		cardCounts:     []int{2, 2, 2},
+		cardCounts:     []int{20, 2, 2},
 		traits:         []int{TRAIT_RAID},
 	})
 	schools = append(schools, &CardSchool{
@@ -1391,6 +1391,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:            2,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
+		actionBonus:    5,
 		cardCounts:     []int{2, 2, 2},
 		traits:         []int{TRAIT_SPY},
 	})
@@ -1399,6 +1400,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:            3,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 2,
+		actionBonus:    7,
 		cardCounts:     []int{4, 4, 4},
 		traits:         []int{TRAIT_ARMED_INTERVENTION},
 	})

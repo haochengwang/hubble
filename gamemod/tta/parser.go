@@ -73,7 +73,7 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 		}
 	}
 
-	cp := GetCurrentPendingPlayer(game)
+	cp := GetCurrentPendingPlayerForPlayAttachment(game)
 	if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
 		stack1, index1, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {

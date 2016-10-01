@@ -36,9 +36,11 @@ const (
 	MOVE_BUILD
 	MOVE_BUILD_WONDER
 	MOVE_UPGRADE
+	MOVE_DISBAND
 	MOVE_SPECIAL_ABILITY
 	MOVE_END
 	MOVE_DISCARD_MILITARY_CARDS
+	MOVE_GENERAL_OP
 	CHOOSE_YELLOW
 	CHOOSE_BLUE
 )
@@ -352,7 +354,7 @@ func (g *TtaGame) nextEventHappen() {
 			if csm.getStackSize(g.futureEventsDeck) <= 0 {
 				return
 			}
-			csm.processRequest(&SwapCardRequest{
+			csm.processRequest(&MoveCardRequest{
 				sourcePosition: CardPosition{
 					stackId:  g.futureEventsDeck,
 					position: 0,
@@ -375,6 +377,27 @@ func (g *TtaGame) nextEventHappen() {
 					stackId:  g.nowEventsDeck,
 					position: randomPerm[i],
 				},
+			})
+		}
+	}
+}
+
+func (g *TtaGame) getPendingAggressionOrPact() (player int, card *Card) {
+	csm := g.cardStackManager
+	for i := 0; i < g.options.PlayerCount; i++ {
+		if csm.getStackSize(g.players[i].stacks[PENDING]) > 0 {
+			return i, csm.getFirstCard(g.players[i].stacks[PENDING])
+		}
+	}
+	return -1, nil
+}
+
+func (g *TtaGame) removePendingAggressionOrPact() {
+	csm := g.cardStackManager
+	for i := 0; i < g.options.PlayerCount; i++ {
+		if csm.getStackSize(g.players[i].stacks[PENDING]) > 0 {
+			csm.processRequest(&BanishAllCardsInStackRequest{
+				stackId: g.players[i].stacks[PENDING],
 			})
 		}
 	}

@@ -572,15 +572,46 @@ func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
 	PrintAll(toStrings(runes))
 }
 
+func GetCurrentPendingPlayer(game *TtaGame) int {
+	stateHolder := game.peekStateHolder()
+	switch h := stateHolder.(type) {
+	case *CivilStateHolder:
+		return game.CurrentPlayer
+	case *DiscardMilitaryCardsStateHolder:
+		return h.player
+	case *PoliticalStateHolder:
+		return game.CurrentPlayer
+	case *DefenseAggressionStateHolder:
+		return h.player
+	case *LosePopulationStateHolder:
+		for i := 0; i < len(game.players); i++ {
+			if h.popToLose[i] <= game.players[i].getFreeWorkers() {
+				return i
+			}
+		}
+		return -1
+	case *PlunderStateHolder:
+		return game.CurrentPlayer
+	default:
+		return -1
+	}
+}
 func PrintCurrentState(game *TtaGame) {
 	stateHolder := game.peekStateHolder()
 	switch h := stateHolder.(type) {
 	case *CivilStateHolder:
-		fmt.Println("[PENDING]Waiting for player ", game.CurrentPlayer, " for civil actions")
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for civil actions")
 	case *DiscardMilitaryCardsStateHolder:
-		fmt.Println("[PENDING]Waiting for player", h.player, "for discarding military cards")
+		fmt.Println("[PENDING]Waiting for player", GetCurrentPendingPlayer(game), "for discarding military cards")
 	case *PoliticalStateHolder:
-		fmt.Println("[PENDING]Waiting for player ", game.CurrentPlayer, " for political actions")
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for political actions")
+	case *DefenseAggressionStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for playing defensive cards")
+		fmt.Println(" Aggression under player ", h.sourcePlayer, ", strength is ", h.sourcePower)
+	case *LosePopulationStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " to choose population to lose[use d command]")
+	case *PlunderStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for choosing crop/resource to plunder[use o command]")
 	default:
 		fmt.Println(h)
 	}

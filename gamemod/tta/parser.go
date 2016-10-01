@@ -33,10 +33,10 @@ func cardIdToIndex(p *PlayerBoard, cardId int) (stack int, index int, ok bool) {
 
 func getIthHandCardSchool(game *TtaGame, index int) *CardSchool {
 	csm := game.cardStackManager
-	if index < 0 || index >= csm.getStackSize(game.players[game.CurrentPlayer].stacks[HAND]) {
+	if index < 0 || index >= csm.getStackSize(game.players[GetCurrentPendingPlayer(game)].stacks[HAND]) {
 		return nil
 	}
-	card := csm.cardStacks[game.players[game.CurrentPlayer].stacks[HAND]][index]
+	card := csm.cardStacks[game.players[GetCurrentPendingPlayer(game)].stacks[HAND]][index]
 	return game.cardSchools[card.schoolId]
 }
 
@@ -54,6 +54,11 @@ func toAttachment(game *TtaGame, start int, splitted []string) []int {
 }
 
 func toPlayAttachment(game *TtaGame, splitted []string) []int {
+	defer func() {
+		if p := recover(); p != nil {
+			fmt.Println(p)
+		}
+	}()
 	result := make([]int, 0)
 	c := -1
 	for i := 1; i < len(splitted); i++ {
@@ -68,7 +73,7 @@ func toPlayAttachment(game *TtaGame, splitted []string) []int {
 		}
 	}
 
-	cp := game.CurrentPlayer
+	cp := GetCurrentPendingPlayer(game)
 	if len(result) == 2 && getIthHandCardSchool(game, c).hasType(CARDTYPE_ACTION_EFFICIENT_UPGRADE) {
 		stack1, index1, ok := cardIdToIndex(game.players[cp], result[0])
 		if !ok {
@@ -136,7 +141,7 @@ func parseCommand(game *TtaGame, command string) {
 		fmt.Println("Unknown command")
 	}
 
-	cp := game.CurrentPlayer
+	cp := GetCurrentPendingPlayer(game)
 	switch splitted[0] {
 	case "show", "s":
 		if len(splitted) < 2 {
@@ -291,6 +296,31 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("OK")
 			}
 		}
+	case "disband", "d":
+		if len(splitted) < 2 {
+			fmt.Println("Unknown command")
+		} else {
+			cardId, err := strconv.Atoi(splitted[1])
+			if err != nil {
+				fmt.Println("Invalid disband command")
+				return
+			}
+			stack, index, ok := cardIdToIndex(game.players[cp], cardId)
+			if !ok {
+				fmt.Println("Invalid disband command")
+				return
+			}
+			err = game.TryResolveMove(&Move{
+				FromPlayer: cp,
+				MoveType:   MOVE_DISBAND,
+				Data:       append([]int{stack, index}),
+			})
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println("OK")
+			}
+		}
 	case "buildwonder", "bw":
 		step := 1
 		if len(splitted) >= 2 {
@@ -361,6 +391,20 @@ func parseCommand(game *TtaGame, command string) {
 			} else {
 				fmt.Println("OK")
 			}
+		}
+	case "operation", "o":
+		att := toAttachment(game, 1, splitted)
+
+		fmt.Println(att)
+		err := game.TryResolveMove(&Move{
+			FromPlayer: cp,
+			MoveType:   MOVE_GENERAL_OP,
+			Data:       att,
+		})
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println("OK")
 		}
 	default:
 		fmt.Println("Unknown command")

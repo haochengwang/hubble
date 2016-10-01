@@ -188,6 +188,16 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid upgrade command"
 		}
 		return true, ""
+	case MOVE_DISBAND:
+		if len(move.Data) < 2 {
+			return false, "Invalid disband command."
+		}
+		stack := move.Data[0]
+		index := move.Data[1]
+		if !p.civilDisbandLegal(stack, index) {
+			return false, "Invalid disband command"
+		}
+		return true, ""
 	case MOVE_SPECIAL_ABILITY:
 		if len(move.Data) < 1 {
 			return false, "Invalid specialability command."
@@ -216,6 +226,7 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 	}
 	move := m.(*Move)
 	p := h.base.game.players[h.base.game.CurrentPlayer]
+
 	switch move.MoveType {
 	case MOVE_FETCH_CARD:
 		index := move.Data[0]
@@ -243,6 +254,10 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 		index1 := move.Data[1]
 		index2 := move.Data[2]
 		p.upgrade(stack, index1, index2, 0)
+	case MOVE_DISBAND:
+		stack := move.Data[0]
+		index := move.Data[1]
+		p.civilDisband(stack, index)
 	case MOVE_SPECIAL_ABILITY:
 		sa := move.Data[0]
 		var attachment interface{}
@@ -295,12 +310,13 @@ func (h *PoliticalStateHolder) IsMoveLegal(m interface{}) (legal bool, reason st
 
 func (h *PoliticalStateHolder) Resolve(m interface{}) {
 	fmt.Println("PoliticalStateHolder.Resolve")
-	h.base.game.popStateHolder()
+	g := h.base.game
+	g.popStateHolder()
 	if m == nil {
 		return
 	}
 	move := m.(*Move)
-	p := h.base.game.players[h.base.game.CurrentPlayer]
+	p := g.players[h.base.game.CurrentPlayer]
 	switch move.MoveType {
 	case MOVE_PLAY_MILITARY_CARD:
 		index := move.Data[0]
@@ -311,6 +327,28 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 			attachment = nil
 		}
 		p.politicalPlayMilitaryHand(index, attachment)
+
+		// Check if aggression or pact is played
+		pp, pendingCard := g.getPendingAggressionOrPact()
+		if pendingCard != nil {
+			school := g.cardSchools[pendingCard.schoolId]
+			if school.hasType(CARDTYPE_AGGRESSION) {
+				g.pushStateHolder(&DefenseAggressionStateHolder{
+					base: BaseStateHolder{
+						game: g,
+					},
+					sourcePlayer: h.base.game.CurrentPlayer,
+					sourcePower:  p.calcPower(),
+					player:       pp,
+				})
+			} else if school.hasType(CARDTYPE_PACT) {
+
+			} else {
+
+			}
+		} else {
+
+		}
 	case MOVE_END:
 	}
 }
@@ -360,6 +398,9 @@ func (h *DiscardMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool
 		return
 	}
 	move := m.(*Move)
+	if move.FromPlayer != h.base.game.CurrentPlayer {
+		return false, "Not current player."
+	}
 	if len(move.Data) > h.toDiscardMax() {
 		return false, "Too many cards."
 	}
@@ -411,7 +452,7 @@ func (h *DrawMilitaryCardsStateHolder) IsPending() bool {
 }
 
 func (h *DrawMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
-	return true, ""
+	return false, ""
 }
 
 func (h *DrawMilitaryCardsStateHolder) Resolve(m interface{}) {
@@ -438,9 +479,127 @@ func (h *DefenseAggressionStateHolder) IsMoveLegal(m interface{}) (legal bool, r
 	}
 	move := m.(*Move)
 	p := h.base.game.players[h.player]
-	return p.defenseAggressionLegal(move.Data), "Invalid card indexes or size."
+	switch move.MoveType {
+	case MOVE_PLAY_MILITARY_CARD:
+		if len(move.Data) < 1 {
+			return false, "Invalid playmilitary command."
+		}
+		if !p.defenseAggressionLegal(move.Data) {
+			return false, "Invalid playmilitary command"
+		}
+		return true, ""
+	case MOVE_END:
+		return true, ""
+	}
+	return false, "Invalid command"
 }
 
 func (h *DefenseAggressionStateHolder) Resolve(m interface{}) {
-	fmt.Println("DrawMilitaryCardsStateHolder.Resolve")
+	move := m.(*Move)
+	g := h.base.game
+	p := g.players[h.player]
+	powerBonus := p.defenseAggressionPowerBonus(move.Data)
+	p.defenseAggression(move.Data)
+	g.popStateHolder()
+
+	// Check if the aggression is successful
+	if h.sourcePower > p.calcPower()+powerBonus {
+		fmt.Println("Aggression is sucgcessful")
+		fmt.Println(h.sourcePower, "vs", p.calcPower(), "+", powerBonus)
+		_, pendingCard := g.getPendingAggressionOrPact()
+		school := g.cardSchools[pendingCard.schoolId]
+		resolveSuccessfulAggression(h.base.game, h.sourcePlayer, h.player, school)
+	} else {
+		fmt.Println("Aggression has failed ")
+		fmt.Println(h.sourcePower, "vs", p.calcPower(), "+", powerBonus)
+	}
+}
+
+type LosePopulationStateHolder struct {
+	base      BaseStateHolder
+	popToLose []int
+}
+
+func (h *LosePopulationStateHolder) IsPending() bool {
+	g := h.base.game
+	for i, p := range g.players {
+		if p.getFreeWorkers() < h.popToLose[i] {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *LosePopulationStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	move := m.(*Move)
+	g := h.base.game
+	if move.FromPlayer < 0 || move.FromPlayer >= g.options.PlayerCount {
+		return false, "Not valid user."
+	}
+	if h.popToLose[move.FromPlayer] <= g.players[move.FromPlayer].getFreeWorkers() {
+		return false, "Not valid user, no need to lose pop"
+	}
+	p := h.base.game.players[move.FromPlayer]
+	switch move.MoveType {
+	case MOVE_DISBAND:
+		if len(move.Data) < 2 {
+			return false, "Invalid disband command."
+		}
+		stack := move.Data[0]
+		index := move.Data[1]
+		return p.canDisband(stack, index), ""
+	}
+	return false, ""
+}
+
+func (h *LosePopulationStateHolder) Resolve(m interface{}) {
+	if !h.IsPending() {
+		h.base.game.popStateHolder()
+		for i, p := range h.base.game.players {
+			p.removeFreeWorkers(h.popToLose[i])
+		}
+		return
+	}
+	if m == nil {
+		return
+	}
+	move := m.(*Move)
+	p := h.base.game.players[move.FromPlayer]
+	switch move.MoveType {
+	case MOVE_DISBAND:
+		stack := move.Data[0]
+		index := move.Data[1]
+		p.canDisband(stack, index)
+	}
+
+	if !h.IsPending() {
+		h.base.game.popStateHolder()
+	}
+}
+
+type GainCropResourceStateHolder struct {
+	base     BaseStateHolder
+	crop     []int
+	resource []int
+}
+
+func (h *GainCropResourceStateHolder) IsPending() bool {
+	return false
+}
+
+func (h *GainCropResourceStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	return false, ""
+}
+
+func (h *GainCropResourceStateHolder) Resolve(m interface{}) {
+	fmt.Println("GainCropResourceStateHolder.Resolve", h.crop, h.resource)
+	for i, r := range h.resource {
+		p := h.base.game.players[i]
+		p.gainResource(r)
+	}
+	for i, c := range h.crop {
+		p := h.base.game.players[i]
+		p.gainCrop(c)
+	}
+	h.base.game.popStateHolder()
 }

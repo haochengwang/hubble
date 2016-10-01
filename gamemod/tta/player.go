@@ -284,6 +284,15 @@ func (p *PlayerBoard) getUrbanCount(stack int) int {
 	return result
 }
 
+func (p *PlayerBoard) getWorkerCount(stack int, index int) int {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= csm.getStackSize(p.stacks[stack]) {
+		return 0
+	}
+	card := csm.cardStacks[p.stacks[stack]][index]
+	return p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW)
+}
+
 func (p *PlayerBoard) getTempMilitaryResource() int {
 	return p.specialTokenManager.getTokenCount(MILITARY_RESOURCE_TEMP, TOKEN_BLUE)
 }
@@ -310,6 +319,15 @@ func (p *PlayerBoard) markPerTurnSpecialAbility(sa int) {
 		bankId:     sa,
 		tokenType:  TOKEN_DEFAULT,
 		tokenCount: 1,
+	})
+}
+
+func (p *PlayerBoard) removeFreeWorkers(amount int) {
+	p.specialTokenManager.processRequest(&MoveTokenRequest{
+		sourceBankId: FREE_WORKER,
+		targetBankId: FREE_YELLOW,
+		tokenType:    TOKEN_YELLOW,
+		tokenCount:   amount,
 	})
 }
 
@@ -407,6 +425,7 @@ func (p *PlayerBoard) gainTempRedTokens(amount int) {
 		tokenCount: amount,
 	})
 }
+
 func (p *PlayerBoard) removeUsableWhiteTokens(count int) {
 	if count < p.getTempWhiteTokens() {
 		p.specialTokenManager.processRequest(&RemoveTokenRequest{
@@ -1420,7 +1439,7 @@ func (p *PlayerBoard) gainResource(amount int) {
 	for i := csm.getStackSize(p.stacks[MINE]) - 1; i >= 0; i-- {
 		card := csm.cardStacks[p.stacks[MINE]][i]
 		school := p.game.cardSchools[card.schoolId]
-		unit := school.productionCrop
+		unit := school.productionResource
 		for {
 			if amount == 0 {
 				return
@@ -2651,9 +2670,11 @@ func (p *PlayerBoard) politicalPlayMilitaryHandLegal(index int, attachment inter
 			return false
 		}
 
+		if p.getUsableRedTokens() < school.miliActionCost {
+			fmt.Println("politicalPlayMilitaryHandLegal not enough red tokens")
+			return false
+		}
 		target_power := p.game.players[target].calcPower()
-		fmt.Println(target_power)
-		fmt.Println(p.calcPower())
 		if target_power >= p.calcPower() {
 			return false
 		}
@@ -2691,7 +2712,7 @@ func (p *PlayerBoard) politicalPlayMilitaryHand(index int, attachment interface{
 	} else if school.hasType(CARDTYPE_AGGRESSION) {
 		target := attachmentAsInt(attachment, -1)
 		targetPlayer := p.game.players[target]
-
+		p.removeUsableRedTokens(school.miliActionCost)
 		csm.processRequest(&MoveCardRequest{
 			sourcePosition: CardPosition{
 				stackId:  p.stacks[MILI_HAND],
@@ -2727,6 +2748,100 @@ func (p *PlayerBoard) defenseAggressionLegal(indexes []int) bool {
 	return true
 }
 
+func (p *PlayerBoard) defenseAggressionPowerBonus(indexes []int) int {
+	csm := p.game.cardStackManager
+	result := 0
+	for _, index := range indexes {
+		card := csm.cardStacks[p.stacks[MILI_HAND]][index]
+		school := p.game.cardSchools[card.schoolId]
+		if school.hasType(CARDTYPE_DEFCOL) {
+			result += school.age * 2
+		} else {
+			result += 1
+		}
+	}
+	fmt.Println("DefenseAgreesion discarded ", len(indexes), " cards, ",
+		result, " strength gained.")
+	return result
+}
+
 func (p *PlayerBoard) defenseAggression(indexes []int) {
 	p.discardMiliCards(indexes)
+}
+
+func (p *PlayerBoard) canDisband(stack, index int) bool {
+	// Valid stacks
+	if stack == MILI_INFANTRY ||
+		stack == MILI_CAVALRY ||
+		stack == MILI_ARTILERY ||
+		stack == MILI_AIRFORCE ||
+		stack == FARM ||
+		stack == MINE ||
+		stack == URBAN_TEMPLE ||
+		stack == URBAN_LAB ||
+		stack == URBAN_ARENA ||
+		stack == URBAN_LIBRARY ||
+		stack == URBAN_THEATER {
+		// Farm, mine, urban buildings or military units
+	} else {
+		return false
+	}
+
+	if p.getWorkerCount(stack, index) <= 0 {
+		fmt.Println("canDisband invalid: no unit to disband", stack, index)
+		return false
+	}
+
+	return true
+}
+
+func (p *PlayerBoard) disband(stack, index int, toFreeWorkerPool bool) {
+	csm := p.game.cardStackManager
+	card := csm.cardStacks[p.stacks[stack]][index]
+	p.game.cardTokenManager.processRequest(&RemoveTokenRequest{
+		bankId:     card.id,
+		tokenType:  TOKEN_YELLOW,
+		tokenCount: 1,
+	})
+	if toFreeWorkerPool {
+		p.specialTokenManager.processRequest(&AddTokenRequest{
+			bankId:     FREE_WORKER,
+			tokenType:  TOKEN_YELLOW,
+			tokenCount: 1,
+		})
+	} else {
+		p.specialTokenManager.processRequest(&AddTokenRequest{
+			bankId:     FREE_YELLOW,
+			tokenType:  TOKEN_YELLOW,
+			tokenCount: 1,
+		})
+	}
+}
+
+func (p *PlayerBoard) civilDisbandLegal(stack, index int) bool {
+	if stack == MILI_INFANTRY ||
+		stack == MILI_CAVALRY ||
+		stack == MILI_ARTILERY ||
+		stack == MILI_AIRFORCE {
+		if p.getUsableRedTokens() <= 0 {
+			return false
+		}
+	} else {
+		if p.getUsableWhiteTokens() <= 0 {
+			return false
+		}
+	}
+	return p.canDisband(stack, index)
+}
+
+func (p *PlayerBoard) civilDisband(stack, index int) {
+	if stack == MILI_INFANTRY ||
+		stack == MILI_CAVALRY ||
+		stack == MILI_ARTILERY ||
+		stack == MILI_AIRFORCE {
+		p.removeUsableRedTokens(1)
+	} else {
+		p.removeUsableWhiteTokens(1)
+	}
+	p.disband(stack, index, true)
 }

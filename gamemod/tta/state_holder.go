@@ -153,6 +153,15 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid play command"
 		}
 		return true, ""
+	case MOVE_PLAY_MILITARY_CARD:
+		if len(move.Data) != 1 {
+			return false, "Invalid playmilitary command."
+		}
+		index := move.Data[0]
+		if !p.civilPlayTacticLegal(index) {
+			return false, "Invalid play command"
+		}
+		return true, ""
 	case MOVE_INC_POP:
 		if !p.canIncreasePop() {
 			return false, "Invalid incpop command"
@@ -240,6 +249,9 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 			attachment = nil
 		}
 		p.playHand(index, attachment)
+	case MOVE_PLAY_MILITARY_CARD:
+		index := move.Data[0]
+		p.civilPlayTactic(index)
 	case MOVE_INC_POP:
 		p.increasePop()
 	case MOVE_BUILD:

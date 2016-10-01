@@ -1350,7 +1350,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		age:            1,
 		cardTypes:      []CardType{CARDTYPE_AGGRESSION},
 		miliActionCost: 1,
-		cardCounts:     []int{20, 2, 2},
+		cardCounts:     []int{2, 2, 2},
 		traits:         []int{TRAIT_RAID},
 	})
 	schools = append(schools, &CardSchool{
@@ -1514,7 +1514,8 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       1,
 		productionPowerLesser: 1,
-		cardCounts:            []int{2, 2, 2},
+		formation:             []int{0, 0},
+		cardCounts:            []int{20, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:            "Heavy Cavalry",
@@ -1522,6 +1523,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       4,
 		productionPowerLesser: 4,
+		formation:             []int{1, 1, 1},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1530,6 +1532,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       2,
 		productionPowerLesser: 2,
+		formation:             []int{0, 0, 0},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1538,6 +1541,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       2,
 		productionPowerLesser: 2,
+		formation:             []int{0, 1},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1546,6 +1550,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       3,
 		productionPowerLesser: 3,
+		formation:             []int{0, 0, 1},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1554,6 +1559,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       8,
 		productionPowerLesser: 4,
+		formation:             []int{0, 0, 1, 1},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1562,6 +1568,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       5,
 		productionPowerLesser: 3,
+		formation:             []int{0, 1, 1},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1570,6 +1577,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       6,
 		productionPowerLesser: 3,
+		formation:             []int{0, 0, 2},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1578,6 +1586,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       5,
 		productionPowerLesser: 3,
+		formation:             []int{2, 2},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1586,6 +1595,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       5,
 		productionPowerLesser: 3,
+		formation:             []int{1, 2},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1594,6 +1604,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       7,
 		productionPowerLesser: 4,
+		formation:             []int{0, 1, 2},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1602,6 +1613,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       9,
 		productionPowerLesser: 5,
+		formation:             []int{0, 2, 2},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -1610,6 +1622,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       10,
 		productionPowerLesser: 5,
+		formation:             []int{1, 2, 2},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1618,6 +1631,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       13,
 		productionPowerLesser: 7,
+		formation:             []int{0, 0, 1, 2},
 		cardCounts:            []int{2, 2, 2},
 	})
 	schools = append(schools, &CardSchool{
@@ -1626,6 +1640,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TACTIC},
 		productionPower:       11,
 		productionPowerLesser: 6,
+		formation:             []int{0, 1, 1, 1},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{

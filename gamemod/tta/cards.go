@@ -128,7 +128,9 @@ type CardSchool struct {
 	productionYellowToken   int // Yellow tokens
 	productionBlueToken     int // Blue tokens
 
-	miliActionCost int // For aggressions and wars
+	miliActionCost int   // For aggressions and wars
+	formation      []int // For tactics only
+	symmetric      bool  // For pacts
 
 	cardCounts []int
 }

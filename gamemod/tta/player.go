@@ -758,10 +758,11 @@ func (p *PlayerBoard) iterateOverTechs(f func(*CardSchool) int, canBeNegative bo
 }
 
 func (p *PlayerBoard) iterateOverUnitsAndEverything(
-	f func(*CardSchool) int, reducer func(int, int) int, canBeNegative bool) int {
+	f func(*CardSchool) interface{},
+	reducer func(interface{}, interface{}) interface{}) interface{} {
 	csm := p.game.cardStackManager
 	allSchools := p.game.cardSchools
-	result := 0
+	var result interface{}
 	// Government
 	governmentCard := csm.getFirstCard(p.stacks[GOVERNMENT])
 	result = f(allSchools[governmentCard.schoolId])
@@ -780,8 +781,9 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(
 		URBAN_THEATER,
 	} {
 		for _, card := range csm.cardStacks[p.stacks[t]] {
-			result = reducer(result, f(allSchools[card.schoolId])*
-				p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW))
+			for i := 0; i < p.game.cardTokenManager.getTokenCount(card.id, TOKEN_YELLOW); i++ {
+				result = reducer(result, f(allSchools[card.schoolId]))
+			}
 		}
 	}
 
@@ -807,44 +809,52 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(
 		result = reducer(result, f(allSchools[card.schoolId]))
 	}
 
-	if result < 0 && !canBeNegative {
-		result = 0
-	}
 	return result
 }
 
 func (p *PlayerBoard) sumOverUnitsAndEverything(
-	f func(*CardSchool) int, canBeNegative bool) int {
-	return p.iterateOverUnitsAndEverything(f, func(a int, b int) int {
-		return a + b
-	}, canBeNegative)
+	f func(*CardSchool) interface{}, canBeNegative bool) int {
+	result := p.iterateOverUnitsAndEverything(f,
+		func(a interface{}, b interface{}) interface{} {
+			return a.(int) + b.(int)
+		}).(int)
+	if !canBeNegative && result < 0 {
+		return 0
+	}
+	return result
 }
 
 func (p *PlayerBoard) maxOverUnitsAndEverything(
-	f func(*CardSchool) int, canBeNegative bool) int {
-	return p.iterateOverUnitsAndEverything(f, func(a int, b int) int {
-		if a > b {
-			return a
-		} else {
-			return b
-		}
-	}, canBeNegative)
+	f func(*CardSchool) interface{}, canBeNegative bool) int {
+	result := p.iterateOverUnitsAndEverything(f,
+		func(a interface{}, b interface{}) interface{} {
+			if a.(int) > b.(int) {
+				return a.(int)
+			} else {
+				return b.(int)
+			}
+		}).(int)
+
+	if !canBeNegative && result < 0 {
+		return 0
+	}
+	return result
 }
 
 func (p *PlayerBoard) calcWhiteTokenLimit() int {
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		return school.productionWhiteToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcRedTokenLimit() int {
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		return school.productionRedToken
 	}, false)
 }
 
 func (p *PlayerBoard) calcCultureInc() int {
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		if p.specialAbilityAvailable(TRAIT_CHARLIE_CHAPLIN) &&
 			school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
 			return school.productionCulture * 2
@@ -859,12 +869,12 @@ func (p *PlayerBoard) calcCultureInc() int {
 }
 
 func (p *PlayerBoard) calcTechInc() int {
-	tech := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	tech := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		return school.productionTech
 	}, false)
 
 	if p.specialAbilityAvailable(TRAIT_LIB_LAB_AMPLIFY) {
-		tech += p.maxOverUnitsAndEverything(func(school *CardSchool) int {
+		tech += p.maxOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_URBAN_LAB) ||
 				school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) {
 				return school.age
@@ -876,8 +886,88 @@ func (p *PlayerBoard) calcTechInc() int {
 	return tech
 }
 
+func (p *PlayerBoard) getAvailableTactic() *CardSchool {
+	csm := p.game.cardStackManager
+	// TODO try to get public tactic area
+	if csm.getStackSize(p.stacks[TACTIC]) > 0 {
+		card := csm.cardStacks[p.stacks[TACTIC]][0]
+		return p.game.cardSchools[card.schoolId]
+	}
+	return nil
+}
+
+func (p *PlayerBoard) calcPowerFromTactic() int {
+	tactic := p.getAvailableTactic()
+	if tactic == nil {
+		return 0
+	}
+
+	allTypes := p.iterateOverUnitsAndEverything(
+		func(school *CardSchool) interface{} {
+			if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
+				if school.age > tactic.age-2 {
+					return [][]int{[]int{1, 0, 0}, []int{1, 0, 0}}
+				} else {
+					return [][]int{[]int{0, 0, 0}, []int{1, 0, 0}}
+				}
+			} else if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
+				if school.age > tactic.age-2 {
+					return [][]int{[]int{0, 1, 0}, []int{0, 1, 0}}
+				} else {
+					return [][]int{[]int{0, 0, 0}, []int{0, 1, 0}}
+				}
+			} else if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
+				if school.age > tactic.age-2 {
+					return [][]int{[]int{0, 0, 1}, []int{0, 0, 1}}
+				} else {
+					return [][]int{[]int{0, 0, 0}, []int{0, 0, 1}}
+				}
+			} else {
+				return [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
+			}
+		},
+		func(a interface{}, b interface{}) interface{} {
+			type1 := a.([][]int)
+			type2 := b.([][]int)
+			result := [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
+			for i := 0; i < len(result); i++ {
+				for j := 0; j < len(result[0]); j++ {
+					result[i][j] = type1[i][j] + type2[i][j]
+				}
+			}
+			return result
+		}).([][]int)
+	requiredTypes := []int{0, 0, 0}
+	for _, t := range tactic.formation {
+		requiredTypes[t]++
+	}
+
+	allSet := 1 << 32 // Maxint
+	for i := 0; i < 3; i++ {
+		if requiredTypes[i] == 0 {
+			continue
+		}
+		s := allTypes[1][i] / requiredTypes[i]
+		if s < allSet {
+			allSet = s
+		}
+	}
+	upToDateSet := 1 << 32 // Maxint
+	for i := 0; i < 3; i++ {
+		if requiredTypes[i] == 0 {
+			continue
+		}
+		s := allTypes[0][i] / requiredTypes[i]
+		if s < allSet {
+			upToDateSet = s
+		}
+	}
+	return allSet*tactic.productionPowerLesser +
+		upToDateSet*(tactic.productionPower-tactic.productionPowerLesser)
+}
+
 func (p *PlayerBoard) calcPower() int {
-	power := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	power := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		ret := school.productionPower
 		if p.specialAbilityAvailable(TRAIT_GREAT_WALL) &&
 			(school.hasType(CARDTYPE_TECH_MILI_INFANTRY) ||
@@ -895,8 +985,11 @@ func (p *PlayerBoard) calcPower() int {
 		return ret
 	}, false)
 
+	fmt.Println("Strength from formation: ", p.calcPowerFromTactic())
+	power += p.calcPowerFromTactic()
+
 	if p.specialAbilityAvailable(TRAIT_JOAN_OF_ARC) {
-		power += p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		power += p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_GOVERNMENT) ||
 				school.hasType(CARDTYPE_TECH_URBAN_TEMPLE) {
 				return school.productionHappiness
@@ -906,7 +999,7 @@ func (p *PlayerBoard) calcPower() int {
 	}
 
 	if p.specialAbilityAvailable(TRAIT_NAPOLEON_BONAPARTE) {
-		infantry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		infantry := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
 				return 1
 			} else {
@@ -917,7 +1010,7 @@ func (p *PlayerBoard) calcPower() int {
 			infantry = 1
 		}
 
-		cavalry := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		cavalry := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
 				return 1
 			} else {
@@ -928,7 +1021,7 @@ func (p *PlayerBoard) calcPower() int {
 			cavalry = 1
 		}
 
-		artilery := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		artilery := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
 				return 1
 			} else {
@@ -939,7 +1032,7 @@ func (p *PlayerBoard) calcPower() int {
 			artilery = 1
 		}
 
-		airforce := p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		airforce := p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			if school.hasType(CARDTYPE_TECH_MILI_AIRFORCE) {
 				return 1
 			} else {
@@ -956,14 +1049,14 @@ func (p *PlayerBoard) calcPower() int {
 }
 
 func (p *PlayerBoard) calcUrbanLimit() int {
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		return school.productionUrbanLimit
 	}, false)
 }
 
 func (p *PlayerBoard) calcHappiness() int {
 	if p.specialAbilityAvailable(TRAIT_ST_PETERS_BASILICA) {
-		return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+		return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 			happiness := school.productionHappiness
 			if happiness > 0 {
 				return happiness + 1
@@ -971,13 +1064,13 @@ func (p *PlayerBoard) calcHappiness() int {
 			return happiness
 		}, false)
 	}
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		return school.productionHappiness
 	}, false)
 }
 
 func (p *PlayerBoard) specialAbilityAvailable(saId int) bool {
-	return p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+	return p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 		if school.hasTrait(saId) {
 			return 1
 		} else {
@@ -2531,7 +2624,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 		p.realignWhiteRedTokens()
 		// Age III wonders
 		if school.hasTrait(TRAIT_HOLLYWOOD) {
-			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 				if school.hasType(CARDTYPE_TECH_URBAN_LIBRARY) ||
 					school.hasType(CARDTYPE_TECH_URBAN_THEATER) {
 					return 2 * school.productionCulture
@@ -2539,7 +2632,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 				return 0
 			}, false))
 		} else if school.hasTrait(TRAIT_INTERNET) {
-			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 				if school.hasType(CARDTYPE_TECH_URBAN) {
 					return school.productionCulture + school.productionTech +
 						school.productionPower
@@ -2554,7 +2647,7 @@ func (p *PlayerBoard) buildWonder(step, reducedCost int) {
 				return 0
 			}, false))
 		} else if school.hasTrait(TRAIT_FAST_FOOD_CHAINS) {
-			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) int {
+			p.gainCulture(p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
 				if school.hasType(CARDTYPE_TECH_MILI) ||
 					school.hasType(CARDTYPE_TECH_URBAN) {
 					return 1
@@ -2861,4 +2954,45 @@ func (p *PlayerBoard) civilDisband(stack, index int) {
 		p.removeUsableWhiteTokens(1)
 	}
 	p.disband(stack, index, true)
+}
+
+func (p *PlayerBoard) civilPlayTacticLegal(index int) bool {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= csm.getStackSize(p.stacks[MILI_HAND]) {
+		fmt.Println("civilPlayTacticLegal invalid index")
+		return false
+	}
+	card := csm.cardStacks[p.stacks[MILI_HAND]][index]
+	school := p.game.cardSchools[card.schoolId]
+
+	if p.getUsableRedTokens() <= 0 {
+		fmt.Println("civilPlayTacticLegal not enough red tokens")
+		return false
+	}
+	return school.hasType(CARDTYPE_TACTIC)
+}
+
+func (p *PlayerBoard) civilPlayTactic(index int) {
+	csm := p.game.cardStackManager
+	p.removeUsableRedTokens(1)
+	// TODO remove token in public tactic area
+	if csm.getStackSize(p.stacks[TACTIC]) > 0 {
+		csm.processRequest(&BanishCardRequest{
+			position: CardPosition{
+				stackId:  p.stacks[TACTIC],
+				position: 0,
+			},
+		})
+	}
+
+	csm.processRequest(&MoveCardRequest{
+		sourcePosition: CardPosition{
+			stackId:  p.stacks[MILI_HAND],
+			position: index,
+		},
+		targetPosition: CardPosition{
+			stackId:  p.stacks[TACTIC],
+			position: 0,
+		},
+	})
 }

@@ -214,6 +214,20 @@ func paintGovernmentAndLeader(player *PlayerBoard) ([][]rune, int) {
 		result = printUpon(result,
 			toRunes([]string{"[" + strconv.Itoa(leaderSchool.schoolId) + "]"}), 32, 4)
 	}
+
+	tacticCard := csm.getFirstCard(player.stacks[TACTIC])
+	if tacticCard != nil {
+		tacticBg := []string{
+			"TACTIC:",
+		}
+		tacticSchool := player.game.cardSchools[tacticCard.schoolId]
+		result = printUpon(result,
+			toRunes(tacticBg), 0, 6)
+		result = printUpon(result,
+			toRunes([]string{"[" + ageToString(tacticSchool.age) +
+				strconv.Itoa(tacticSchool.schoolId) + "] " +
+				tacticSchool.schoolName}), 10, 6)
+	}
 	return result, len(result)
 }
 

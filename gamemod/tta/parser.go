@@ -392,6 +392,26 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("OK")
 			}
 		}
+	case "learntactic", "lt":
+		if len(splitted) != 2 {
+			fmt.Println("Unknown command")
+		} else {
+			index, err := strconv.Atoi(splitted[1])
+			if err != nil {
+				fmt.Println("Invalid index")
+				return
+			}
+			err = game.TryResolveMove(&Move{
+				FromPlayer: cp,
+				MoveType:   MOVE_LEARN_TACTIC,
+				Data:       []int{index},
+			})
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println("OK")
+			}
+		}
 	case "operation", "o":
 		att := toAttachment(game, 1, splitted)
 

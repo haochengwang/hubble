@@ -521,6 +521,32 @@ func paintEventDecks(game *TtaGame) ([][]rune, int) {
 	return result, len(result)
 }
 
+func paintPublicTacticDeck(game *TtaGame) ([][]rune, int) {
+	csm := game.cardStackManager
+	backGround := []string{
+		"+-----------------+",
+		"      TACTICS      ",
+	}
+	result := toRunes(backGround)
+	for i := 0; i < csm.getStackSize(game.publicTacticDeck); i++ {
+		tacticCard := csm.cardStacks[game.publicTacticDeck][i]
+		tacticSchool := game.cardSchools[tacticCard.schoolId]
+
+		infoStr := ""
+		for pid := 0; pid < game.options.PlayerCount; pid++ {
+			if game.cardTokenManager.getTokenCount(tacticCard.id, pid) > 0 {
+				infoStr += "[" + strconv.Itoa(pid) + "]"
+			}
+		}
+		result = printUpon(result,
+			toRunes([]string{infoStr + "[" + ageToString(tacticSchool.age) +
+				strconv.Itoa(tacticSchool.schoolId) + "]" +
+				tacticSchool.schoolName}), 0, 2+i)
+	}
+
+	return result, len(result)
+}
+
 func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
 	csm := game.cardStackManager
 	schools := InitBasicCardSchools()
@@ -541,6 +567,9 @@ func PrintGreatWheels(game *TtaGame) ([][]rune, int) {
 
 	events, _ := paintEventDecks(game)
 	result = printUpon(result, events, 40, 0)
+
+	tactics, _ := paintPublicTacticDeck(game)
+	result = printUpon(result, tactics, 40, 7)
 	return result, len(result)
 }
 

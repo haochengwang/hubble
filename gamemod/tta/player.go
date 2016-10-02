@@ -893,6 +893,20 @@ func (p *PlayerBoard) getAvailableTactic() *CardSchool {
 		card := csm.cardStacks[p.stacks[TACTIC]][0]
 		return p.game.cardSchools[card.schoolId]
 	}
+
+	pid := -1
+	for i := 0; i < p.game.options.PlayerCount; i++ {
+		if p == p.game.players[i] {
+			pid = i
+		}
+	}
+	for i := 0; i < csm.getStackSize(p.game.publicTacticDeck); i++ {
+		card := csm.cardStacks[p.game.publicTacticDeck][i]
+		if p.game.cardTokenManager.getTokenCount(card.id, pid) > 0 {
+			fmt.Println("Current tactic school: ", card.schoolId)
+			return p.game.cardSchools[card.schoolId]
+		}
+	}
 	return nil
 }
 
@@ -2975,7 +2989,7 @@ func (p *PlayerBoard) civilPlayTacticLegal(index int) bool {
 func (p *PlayerBoard) civilPlayTactic(index int) {
 	csm := p.game.cardStackManager
 	p.removeUsableRedTokens(1)
-	// TODO remove token in public tactic area
+	p.game.clearTacticUserTokens(p.game.CurrentPlayer)
 	if csm.getStackSize(p.stacks[TACTIC]) > 0 {
 		csm.processRequest(&BanishCardRequest{
 			position: CardPosition{
@@ -2995,4 +3009,33 @@ func (p *PlayerBoard) civilPlayTactic(index int) {
 			position: 0,
 		},
 	})
+}
+
+func (p *PlayerBoard) civilLearnTacticLegal(index int) bool {
+	csm := p.game.cardStackManager
+	if index < 0 || index >= csm.getStackSize(p.game.publicTacticDeck) {
+		fmt.Println("civilLearnTacticLegal invalid index")
+		return false
+	}
+	if p.getUsableRedTokens() <= 1 {
+		fmt.Println("civilLearnTacticLegal not enough red tokens")
+		return false
+	}
+	return true
+}
+
+func (p *PlayerBoard) civilLearnTactic(index int) {
+	csm := p.game.cardStackManager
+	p.removeUsableRedTokens(2)
+	g := p.game
+	if csm.getStackSize(p.stacks[TACTIC]) > 0 {
+		csm.processRequest(&BanishCardRequest{
+			position: CardPosition{
+				stackId:  p.stacks[TACTIC],
+				position: 0,
+			},
+		})
+	}
+	g.clearTacticUserTokens(g.CurrentPlayer)
+	g.userLearnTactic(p.game.CurrentPlayer, index)
 }

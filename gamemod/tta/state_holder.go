@@ -39,6 +39,8 @@ func (h *TurnStartStateHolder) Resolve(move interface{}) {
 		g.banishAgeACards()
 	}
 
+	// Put tactic to shared zone
+	g.shareTactic(g.CurrentPlayer)
 	g.popStateHolder()
 	g.pushStateHolder(&TurnEndStateHolder{
 		base: BaseStateHolder{
@@ -222,6 +224,15 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 			return false, "Invalid specialability command"
 		}
 		return true, ""
+	case MOVE_LEARN_TACTIC:
+		if len(move.Data) != 1 {
+			return false, "Invalid learntactic command."
+		}
+		index := move.Data[0]
+		if !p.civilLearnTacticLegal(index) {
+			return false, "Invalid learntactic command"
+		}
+		return true, ""
 	case MOVE_END:
 		return true, ""
 	}
@@ -279,6 +290,9 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 			attachment = nil
 		}
 		p.useCivilSpecialAbility(sa, attachment)
+	case MOVE_LEARN_TACTIC:
+		index := move.Data[0]
+		p.civilLearnTactic(index)
 	case MOVE_END:
 		h.base.game.popStateHolder()
 	}

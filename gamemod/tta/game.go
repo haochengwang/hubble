@@ -38,6 +38,7 @@ const (
 	MOVE_UPGRADE
 	MOVE_DISBAND
 	MOVE_SPECIAL_ABILITY
+	MOVE_LEARN_TACTIC
 	MOVE_END
 	MOVE_DISCARD_MILITARY_CARDS
 	MOVE_GENERAL_OP
@@ -576,4 +577,69 @@ func (g *TtaGame) TryResolveMove(move *Move) (err error) {
 			stateHolder.Resolve(nil)
 		}
 	}
+}
+
+func (g *TtaGame) shareTactic(pid int) {
+	csm := g.cardStackManager
+	p := g.players[pid]
+	card := csm.getFirstCard(p.stacks[TACTIC])
+	if card != nil {
+		index := csm.getStackSize(g.publicTacticDeck)
+		for i := 0; i < index; i++ {
+			if csm.cardStacks[g.publicTacticDeck][i].schoolId == card.schoolId {
+				index = i
+				break
+			}
+		}
+
+		// Just banish the card if the same tactic is already shared
+		if index == csm.getStackSize(g.publicTacticDeck) {
+			csm.processRequest(&MoveCardRequest{
+				sourcePosition: CardPosition{
+					stackId:  p.stacks[TACTIC],
+					position: 0,
+				},
+				targetPosition: CardPosition{
+					stackId:  g.publicTacticDeck,
+					position: index,
+				},
+			})
+		} else {
+			csm.processRequest(&BanishCardRequest{
+				position: CardPosition{
+					stackId:  p.stacks[TACTIC],
+					position: 0,
+				},
+			})
+		}
+
+		// Put user token on the tactic card
+		tacticCard := csm.cardStacks[g.publicTacticDeck][index]
+		g.cardTokenManager.processRequest(&AddTokenRequest{
+			bankId:     tacticCard.id,
+			tokenType:  pid,
+			tokenCount: 1,
+		})
+	}
+}
+
+func (g *TtaGame) clearTacticUserTokens(pid int) {
+	csm := g.cardStackManager
+	for i := 0; i < csm.getStackSize(g.publicTacticDeck); i++ {
+		tacticCard := csm.cardStacks[g.publicTacticDeck][i]
+		g.cardTokenManager.processRequest(&ClearTokenRequest{
+			bankId:    tacticCard.id,
+			tokenType: pid,
+		})
+	}
+}
+
+func (g *TtaGame) userLearnTactic(pid int, tid int) {
+	csm := g.cardStackManager
+	tacticCard := csm.cardStacks[g.publicTacticDeck][tid]
+	g.cardTokenManager.processRequest(&AddTokenRequest{
+		bankId:     tacticCard.id,
+		tokenType:  pid,
+		tokenCount: 1,
+	})
 }

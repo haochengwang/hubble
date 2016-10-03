@@ -685,7 +685,7 @@ func (g *TtaGame) acceptPendingPact() {
 }
 
 func (g *TtaGame) rejectPendingPact() {
-	pid, card := g.popPendingAggressionOrPact()
+	pid, card := g.getPendingAggressionOrPact()
 	g.cardTokenManager.processRequest(&ClearTokenRequest{
 		bankId:    card.id,
 		tokenType: PACT_A,
@@ -707,4 +707,21 @@ func (g *TtaGame) rejectPendingPact() {
 			),
 		},
 	})
+}
+
+func (g *TtaGame) removePact(pid int) {
+	csm := g.cardStackManager
+	card := csm.getFirstCard(g.players[pid].stacks[PACT])
+	if card != nil {
+		csm.processRequest(&BanishCardRequest{
+			position: CardPosition{
+				stackId:  g.players[pid].stacks[PACT],
+				position: 0,
+			},
+		})
+	}
+
+	for _, p := range g.players {
+		p.realignWhiteRedTokens()
+	}
 }

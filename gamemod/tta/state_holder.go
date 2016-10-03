@@ -368,7 +368,16 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 					player:       pp,
 				})
 			} else if school.hasType(CARDTYPE_PACT) {
-
+				aSideSelected := g.cardTokenManager.getTokenCount(
+					pendingCard.id, PACT_A) > 0
+				g.pushStateHolder(&ConfirmPactStateHolder{
+					base: BaseStateHolder{
+						game: g,
+					},
+					sourcePlayer:  h.base.game.CurrentPlayer,
+					player:        pp,
+					aSideSelected: aSideSelected,
+				})
 			} else {
 
 			}
@@ -500,9 +509,6 @@ func (h *DefenseAggressionStateHolder) IsPending() bool {
 }
 
 func (h *DefenseAggressionStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
-	if m == nil {
-		return
-	}
 	move := m.(*Move)
 	p := h.base.game.players[h.player]
 	switch move.MoveType {
@@ -532,12 +538,60 @@ func (h *DefenseAggressionStateHolder) Resolve(m interface{}) {
 	if h.sourcePower > p.calcPower()+powerBonus {
 		fmt.Println("Aggression is sucgcessful")
 		fmt.Println(h.sourcePower, "vs", p.calcPower(), "+", powerBonus)
-		_, pendingCard := g.getPendingAggressionOrPact()
+		_, pendingCard := g.popPendingAggressionOrPact()
 		school := g.cardSchools[pendingCard.schoolId]
 		resolveSuccessfulAggression(h.base.game, h.sourcePlayer, h.player, school)
 	} else {
 		fmt.Println("Aggression has failed ")
 		fmt.Println(h.sourcePower, "vs", p.calcPower(), "+", powerBonus)
+		g.popPendingAggressionOrPact()
+	}
+}
+
+type ConfirmPactStateHolder struct {
+	base          BaseStateHolder
+	sourcePlayer  int
+	player        int
+	aSideSelected bool
+}
+
+func (h *ConfirmPactStateHolder) IsPending() bool {
+	return true
+}
+
+func (h *ConfirmPactStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	move := m.(*Move)
+	switch move.MoveType {
+	case MOVE_GENERAL_OP:
+		if len(move.Data) != 1 {
+			return false, "Invalid operation command."
+		}
+		return true, ""
+	case MOVE_END:
+		return true, ""
+	}
+	return false, "Invalid command"
+}
+
+func (h *ConfirmPactStateHolder) Resolve(m interface{}) {
+	move := m.(*Move)
+	g := h.base.game
+	g.popStateHolder()
+
+	accepted := false
+	switch move.MoveType {
+	case MOVE_GENERAL_OP:
+		if move.Data[0] > 0 {
+			accepted = true
+		}
+	}
+	// Check if the pact is accepted
+	if accepted {
+		fmt.Println("Pact is accpeted")
+		g.acceptPendingPact()
+	} else {
+		fmt.Println("Pact is rejected")
+		g.rejectPendingPact()
 	}
 }
 

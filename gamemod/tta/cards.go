@@ -96,6 +96,23 @@ const (
 	TRAIT_INFILTRATE
 	TRAIT_SPY
 	TRAIT_ARMED_INTERVENTION
+
+	// Pacts
+	TRAIT_OPEN_BORDER_AGGREMENT
+	TRAIT_TRADE_ROUTE_AGGREMENT_A
+	TRAIT_TRADE_ROUTE_AGGREMENT_B
+	TRAIT_ACCEPTANCE_OF_SUPREMACY_A
+	TRAIT_ACCEPTANCE_OF_SUPREMACY_B
+	TRAIT_INTERNATIONAL_TRADE_AGGREMENT_A
+	TRAIT_INTERNATIONAL_TRADE_AGGREMENT_B
+	TRAIT_PROMISE_OF_MILITARY_PROTECTION_A
+	TRAIT_PROMISE_OF_MILITARY_PROTECTION_B
+	TRAIT_SCIENTIFIC_COOPERATION
+	TRAIT_INTERNATIONAL_TOURISM
+	TRAIT_LOSS_OF_SOVEREIGNTY_A
+	TRAIT_LOSS_OF_SOVEREIGNTY_B
+	TRAIT_MILITARY_ALLIANCE
+	TRAIT_PEACE_TREATY
 )
 
 type CardSchool struct {
@@ -131,6 +148,10 @@ type CardSchool struct {
 	miliActionCost int   // For aggressions and wars
 	formation      []int // For tactics only
 	symmetric      bool  // For pacts
+	canAttack      bool  // For pacts
+	endOnAttack    bool  // For pacts
+
+	bSide *CardSchool // For pacts, the virtual card of b side pact
 
 	cardCounts []int
 }

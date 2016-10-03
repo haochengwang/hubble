@@ -393,6 +393,24 @@ func (g *TtaGame) getPendingAggressionOrPact() (player int, card *Card) {
 	return -1, nil
 }
 
+func (g *TtaGame) popPendingAggressionOrPact() (player int, card *Card) {
+	csm := g.cardStackManager
+	for i := 0; i < g.options.PlayerCount; i++ {
+		if csm.getStackSize(g.players[i].stacks[PENDING]) > 0 {
+			player = i
+			card = csm.getFirstCard(g.players[i].stacks[PENDING])
+			csm.processRequest(&BanishCardRequest{
+				position: CardPosition{
+					stackId:  g.players[i].stacks[PENDING],
+					position: 0,
+				},
+			})
+			return player, card
+		}
+	}
+	return -1, nil
+}
+
 func (g *TtaGame) removePendingAggressionOrPact() {
 	csm := g.cardStackManager
 	for i := 0; i < g.options.PlayerCount; i++ {
@@ -570,7 +588,6 @@ func (g *TtaGame) TryResolveMove(move *Move) (err error) {
 			return
 		}
 		stateHolder = g.peekStateHolder()
-		fmt.Println("loop", stateHolder)
 		if stateHolder.IsPending() {
 			return nil
 		} else {
@@ -641,5 +658,53 @@ func (g *TtaGame) userLearnTactic(pid int, tid int) {
 		bankId:     tacticCard.id,
 		tokenType:  pid,
 		tokenCount: 1,
+	})
+}
+
+func (g *TtaGame) acceptPendingPact() {
+	pid, card := g.getPendingAggressionOrPact()
+	g.cardTokenManager.processRequest(&AddTokenRequest{
+		bankId:     card.id,
+		tokenType:  pid,
+		tokenCount: 1,
+	})
+
+	g.cardStackManager.processRequest(&MoveCardRequest{
+		sourcePosition: CardPosition{
+			stackId:  g.players[pid].stacks[PENDING],
+			position: 0,
+		},
+		targetPosition: CardPosition{
+			stackId:  g.players[g.CurrentPlayer].stacks[PACT],
+			position: 0,
+		},
+	})
+
+	g.players[g.CurrentPlayer].realignWhiteRedTokens()
+	g.players[pid].realignWhiteRedTokens()
+}
+
+func (g *TtaGame) rejectPendingPact() {
+	pid, card := g.popPendingAggressionOrPact()
+	g.cardTokenManager.processRequest(&ClearTokenRequest{
+		bankId:    card.id,
+		tokenType: PACT_A,
+	})
+	g.cardTokenManager.processRequest(&ClearTokenRequest{
+		bankId:    card.id,
+		tokenType: PACT_B,
+	})
+
+	g.cardStackManager.processRequest(&MoveCardRequest{
+		sourcePosition: CardPosition{
+			stackId:  g.players[pid].stacks[PENDING],
+			position: 0,
+		},
+		targetPosition: CardPosition{
+			stackId: g.players[g.CurrentPlayer].stacks[MILI_HAND],
+			position: g.cardStackManager.getStackSize(
+				g.players[g.CurrentPlayer].stacks[MILI_HAND],
+			),
+		},
 	})
 }

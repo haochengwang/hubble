@@ -35,7 +35,13 @@ const (
 )
 
 const (
-	FREE_YELLOW = iota
+	PLAYER_0 = iota
+	PLAYER_1
+	PLAYER_2
+	PLAYER_3
+	PACT_A
+	PACT_B
+	FREE_YELLOW
 	FREE_BLUE
 	FREE_WORKER
 	WHITE_USED
@@ -173,6 +179,15 @@ func initPlayerBoard(game *TtaGame) (result *PlayerBoard) {
 		techTokenManager:    techTokenManager,
 		perTurnTokenManager: perTurnTokenManager,
 	}
+}
+
+func (p *PlayerBoard) getIndex() int {
+	for i, pp := range p.game.players {
+		if p == pp {
+			return i
+		}
+	}
+	return -1
 }
 
 func (p *PlayerBoard) getCultureTotal() int {
@@ -807,6 +822,41 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(
 	// Wonders
 	for _, card := range csm.cardStacks[p.stacks[WONDER_COMPLETED]] {
 		result = reducer(result, f(allSchools[card.schoolId]))
+	}
+	// Pacts
+	for _, card := range csm.cardStacks[p.stacks[PACT]] {
+		school := allSchools[card.schoolId]
+		if school.symmetric {
+			result = reducer(result, f(school))
+		} else {
+			if p.game.cardTokenManager.getTokenCount(card.id, PACT_A) > 0 {
+				result = reducer(result, f(school))
+			} else if p.game.cardTokenManager.getTokenCount(card.id, PACT_B) > 0 {
+				result = reducer(result, f(school.bSide))
+			}
+		}
+	}
+
+	// Pacts from other player
+	for _, pp := range p.game.players {
+		if p == pp {
+			continue
+		}
+		for _, card := range csm.cardStacks[pp.stacks[PACT]] {
+			if p.game.cardTokenManager.getTokenCount(card.id, p.getIndex()) > 0 {
+				school := allSchools[card.schoolId]
+				if school.symmetric {
+					result = reducer(result, f(school))
+				} else {
+					if p.game.cardTokenManager.getTokenCount(card.id, PACT_B) > 0 {
+						result = reducer(result, f(school))
+					} else if p.game.cardTokenManager.getTokenCount(card.id, PACT_A) > 0 {
+						result = reducer(result, f(school.bSide))
+					}
+				}
+
+			}
+		}
 	}
 
 	return result
@@ -2804,8 +2854,14 @@ func (p *PlayerBoard) politicalPlayMilitaryHandLegal(index int, attachment inter
 		}
 		return true
 	} else if school.hasType(CARDTYPE_PACT) {
-		target := attachmentAsInt(attachment, -1)
+		attachment := attachmentAsIntList(attachment, []int{})
+		if len(attachment) < 1 {
+			fmt.Println("politicalPlayMilitaryHandLegal not enough parameters")
+			return false
+		}
+		target := attachment[0]
 		if target < 0 || target >= p.game.options.PlayerCount {
+			fmt.Println("politicalPlayMilitaryHandLegal invalid player:", target)
 			return false
 		}
 		if target == p.game.CurrentPlayer {
@@ -2837,6 +2893,39 @@ func (p *PlayerBoard) politicalPlayMilitaryHand(index int, attachment interface{
 		target := attachmentAsInt(attachment, -1)
 		targetPlayer := p.game.players[target]
 		p.removeUsableRedTokens(school.miliActionCost)
+		csm.processRequest(&MoveCardRequest{
+			sourcePosition: CardPosition{
+				stackId:  p.stacks[MILI_HAND],
+				position: index,
+			},
+			targetPosition: CardPosition{
+				stackId:  targetPlayer.stacks[PENDING],
+				position: 0,
+			},
+		})
+	} else if school.hasType(CARDTYPE_PACT) {
+		attachment := attachmentAsIntList(attachment, []int{})
+		target := attachment[0]
+		bSide := false
+		if len(attachment) > 1 && attachment[1] > 0 {
+			bSide = true
+		}
+		// Set ab side token
+		if bSide {
+			p.game.cardTokenManager.processRequest(&AddTokenRequest{
+				bankId:     card.id,
+				tokenType:  PACT_B,
+				tokenCount: 1,
+			})
+		} else {
+			p.game.cardTokenManager.processRequest(&AddTokenRequest{
+				bankId:     card.id,
+				tokenType:  PACT_A,
+				tokenCount: 1,
+			})
+		}
+
+		targetPlayer := p.game.players[target]
 		csm.processRequest(&MoveCardRequest{
 			sourcePosition: CardPosition{
 				stackId:  p.stacks[MILI_HAND],

@@ -228,6 +228,53 @@ func paintGovernmentAndLeader(player *PlayerBoard) ([][]rune, int) {
 				strconv.Itoa(tacticSchool.schoolId) + "] " +
 				tacticSchool.schoolName}), 10, 6)
 	}
+
+	return result, len(result)
+}
+
+func paintPact(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	g := player.game
+	result := toRunes([]string{})
+	pactCard := csm.getFirstCard(player.stacks[PACT])
+	if pactCard != nil {
+		pactBg := []string{
+			" PACT:",
+			" +--------------------------------+",
+			" |                                |",
+			" |                                |",
+			" +--------------------------------+",
+		}
+		pactSchool := player.game.cardSchools[pactCard.schoolId]
+		result = printUpon(result,
+			toRunes(pactBg), 0, 0)
+		result = printUpon(result,
+			toRunes([]string{"[" + ageToString(pactSchool.age) +
+				strconv.Itoa(pactSchool.schoolId) + "] " +
+				pactSchool.schoolName}), 2, 2)
+
+		a := -1
+		b := -1
+		if g.cardTokenManager.getTokenCount(pactCard.id, PACT_A) > 0 {
+			a = player.getIndex()
+			for i := 0; i < g.options.PlayerCount; i++ {
+				if g.cardTokenManager.getTokenCount(pactCard.id, i) > 0 {
+					b = i
+				}
+			}
+		} else if g.cardTokenManager.getTokenCount(pactCard.id, PACT_B) > 0 {
+			b = player.getIndex()
+			for i := 0; i < g.options.PlayerCount; i++ {
+				if g.cardTokenManager.getTokenCount(pactCard.id, i) > 0 {
+					a = i
+				}
+			}
+		}
+
+		result = printUpon(result,
+			toRunes([]string{"[A]Player" + strconv.Itoa(a) +
+				" {B]Player" + strconv.Itoa(b)}), 2, 3)
+	}
 	return result, len(result)
 }
 
@@ -602,7 +649,9 @@ func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
 	h += height
 	govLeader, height := paintGovernmentAndLeader(player)
 	runes = printUpon(runes, govLeader, 1, h)
-
+	h += height
+	pacts, height := paintPact(player)
+	runes = printUpon(runes, pacts, 1, h)
 	h += height
 	specTech, height := paintSpecialTechs(player)
 	runes = printUpon(runes, specTech, 1, h)
@@ -670,6 +719,9 @@ func PrintCurrentState(game *TtaGame) {
 		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for choosing crop/resource to plunder[use o command]")
 	case *RaidStateHolder:
 		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for choosing structure of player ", h.targetPlayer, "to destroy[use d command]")
+	case *ConfirmPactStateHolder:
+		fmt.Println("[PENDING]Waiting for player ", GetCurrentPendingPlayer(game), " for confirming pact:")
+		fmt.Println(" Aggression under player ", h.sourcePlayer)
 	default:
 		fmt.Println(h)
 	}

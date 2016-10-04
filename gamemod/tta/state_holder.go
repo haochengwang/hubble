@@ -328,6 +328,15 @@ func (h *PoliticalStateHolder) IsMoveLegal(m interface{}) (legal bool, reason st
 			return false, "Invalid playmilitary command"
 		}
 		return true, ""
+	case MOVE_BREAK_PACT:
+		if len(move.Data) != 1 {
+			return false, "Invalid breakpact command."
+		}
+		pid := move.Data[0]
+		if !p.politicalBreakPactLegal(pid) {
+			return false, "Invalid breakpact command"
+		}
+		return true, ""
 	case MOVE_END:
 		return true, ""
 	}
@@ -384,6 +393,9 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 		} else {
 
 		}
+	case MOVE_BREAK_PACT:
+		pid := move.Data[0]
+		p.politicalBreakPact(pid)
 	case MOVE_END:
 	}
 }

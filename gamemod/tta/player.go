@@ -3128,3 +3128,30 @@ func (p *PlayerBoard) civilLearnTactic(index int) {
 	g.clearTacticUserTokens(g.CurrentPlayer)
 	g.userLearnTactic(p.game.CurrentPlayer, index)
 }
+
+func (p *PlayerBoard) politicalBreakPactLegal(pid int) bool {
+	g := p.game
+	csm := g.cardStackManager
+	if pid < 0 || pid >= g.options.PlayerCount {
+		fmt.Println("politicalBreakPactLegal invalid index")
+		return false
+	}
+
+	card := csm.getFirstCard(g.players[pid].stacks[PACT])
+	if card == nil {
+		fmt.Println("politicalBreakPactLegal pact not found")
+		return false
+	}
+
+	if pid != p.getIndex() {
+		if g.cardTokenManager.getTokenCount(card.id, p.getIndex()) <= 0 {
+			fmt.Println("politicalBreakPactLegal not part of the pact")
+			return false
+		}
+	}
+	return true
+}
+
+func (p *PlayerBoard) politicalBreakPact(pid int) {
+	p.game.removePact(pid)
+}

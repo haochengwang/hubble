@@ -1455,7 +1455,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		endOnAttack:        false,
 		productionRedToken: 1,
 		traits:             []int{TRAIT_OPEN_BORDER_AGGREMENT},
-		cardCounts:         []int{100, 1, 1},
+		cardCounts:         []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName:  "Trade Routes Agreement",

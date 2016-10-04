@@ -42,6 +42,7 @@ const (
 	MOVE_END
 	MOVE_BREAK_PACT
 	MOVE_DISCARD_MILITARY_CARDS
+	MOVE_COLONIZE
 	MOVE_GENERAL_OP
 	CHOOSE_YELLOW
 	CHOOSE_BLUE
@@ -260,6 +261,13 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			},
 		})
 	}
+	csm.processRequest(&AddCardRequest{
+		schoolId: 227,
+		position: CardPosition{
+			stackId:  g.nowEventsDeck,
+			position: csm.getStackSize(g.nowEventsDeck),
+		},
+	})
 	g.banishAgeAMilitaryCards()
 }
 
@@ -453,91 +461,6 @@ func (g *TtaGame) countPlayersWithPowerMoreThan(power int) int {
 		}
 	}
 	return result
-}
-
-func (g *TtaGame) processCivilMove(move *Move) (err error) {
-	if move.FromPlayer != g.CurrentPlayer {
-		return fmt.Errorf("Not current player.")
-	}
-	p := g.players[g.CurrentPlayer]
-	switch move.MoveType {
-	case MOVE_FETCH_CARD:
-		if len(move.Data) != 1 {
-			return fmt.Errorf("Invalid fetch command.")
-		}
-		index := move.Data[0]
-		if !p.canTakeCardFromWheel(index) {
-			return fmt.Errorf("Invalid fetch command.")
-		}
-		p.takeCardFromWheel(index)
-	case MOVE_PLAY_CIVIL_CARD:
-		if len(move.Data) < 1 {
-			return fmt.Errorf("Invalid play command.")
-		}
-		index := move.Data[0]
-		var attachment interface{}
-		if len(move.Data) > 1 {
-			attachment = move.Data[1:]
-		} else {
-			attachment = nil
-		}
-		if !p.canPlayHand(index, attachment) {
-			return fmt.Errorf("Invalid play command")
-		}
-		p.playHand(index, attachment)
-	case MOVE_INC_POP:
-		if !p.canIncreasePop() {
-			return fmt.Errorf("Invalid incpop command")
-		}
-		p.increasePop()
-	case MOVE_BUILD:
-		if len(move.Data) < 2 {
-			return fmt.Errorf("Invalid build command.")
-		}
-		stack := move.Data[0]
-		index := move.Data[1]
-		if !p.canBuild(stack, index, 0) {
-			return fmt.Errorf("Invalid build command")
-		}
-		p.build(stack, index, 0)
-	case MOVE_BUILD_WONDER:
-		if len(move.Data) < 1 {
-			return fmt.Errorf("Invalid buildwonder command.")
-		}
-		step := move.Data[0]
-		if !p.canBuildWonder(step, 0) {
-			return fmt.Errorf("Invalid buildwonder command")
-		}
-		p.buildWonder(step, 0)
-	case MOVE_UPGRADE:
-		if len(move.Data) < 3 {
-			return fmt.Errorf("Invalid upgrade command.")
-		}
-		stack := move.Data[0]
-		index1 := move.Data[1]
-		index2 := move.Data[2]
-		if !p.canUpgrade(stack, index1, index2, 0) {
-			return fmt.Errorf("Invalid upgrade command")
-		}
-		p.upgrade(stack, index1, index2, 0)
-	case MOVE_SPECIAL_ABILITY:
-		if len(move.Data) < 1 {
-			return fmt.Errorf("Invalid specialability command.")
-		}
-		sa := move.Data[0]
-		var attachment interface{}
-		if len(move.Data) > 1 {
-			attachment = move.Data[1:]
-		} else {
-			attachment = nil
-		}
-		if !p.canUseCivilSpecialAbility(sa, attachment) {
-			return fmt.Errorf("Invalid specialability command")
-		}
-		p.useCivilSpecialAbility(sa, attachment)
-	case MOVE_END:
-	}
-	return nil
 }
 
 func (g *TtaGame) processDiscardMilitaryMove(move *Move) (err error) {

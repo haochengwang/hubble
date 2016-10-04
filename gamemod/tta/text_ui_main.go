@@ -278,6 +278,27 @@ func paintPact(player *PlayerBoard) ([][]rune, int) {
 	return result, len(result)
 }
 
+func paintColonies(player *PlayerBoard) ([][]rune, int) {
+	csm := player.game.cardStackManager
+	coloniesBg := []string{
+		"==============================",
+		" COLONIES:",
+	}
+	result := toRunes(coloniesBg)
+	for i, colonyCard := range csm.cardStacks[player.stacks[COLONY]] {
+		school := player.game.cardSchools[colonyCard.schoolId]
+		result = printUpon(result,
+			toRunes([]string{"[" + ageToString(school.age) +
+				strconv.Itoa(school.schoolId) + "] " +
+				school.schoolName}), 10, 1+i)
+	}
+	if csm.getStackSize(player.stacks[COLONY]) > 0 {
+		return result, len(result)
+	} else {
+		return toRunes([]string{}), 0
+	}
+}
+
 func paintSpecialTechs(player *PlayerBoard) ([][]rune, int) {
 	csm := player.game.cardStackManager
 	need := false
@@ -659,6 +680,9 @@ func PrintUserBoard(game *TtaGame, player *PlayerBoard) {
 	wonders, height := paintWonders(player)
 	runes = printUpon(runes, wonders, 1, h)
 	h += height
+	colonies, height := paintColonies(player)
+	runes = printUpon(runes, colonies, 1, h)
+	h += height
 	hands, height := paintHands(player)
 	runes = printUpon(runes, hands, 1, h)
 	PrintAll(toStrings(runes))
@@ -686,6 +710,8 @@ func GetCurrentPendingPlayer(game *TtaGame) int {
 		return game.CurrentPlayer
 	case *RaidStateHolder:
 		return game.CurrentPlayer
+	case *ColonizeStateHolder:
+		return h.currentPlayer
 	default:
 		return -1
 	}

@@ -372,7 +372,7 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 					base: BaseStateHolder{
 						game: g,
 					},
-					sourcePlayer: h.base.game.CurrentPlayer,
+					sourcePlayer: g.CurrentPlayer,
 					sourcePower:  p.calcPower(),
 					player:       pp,
 				})
@@ -383,14 +383,14 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 					base: BaseStateHolder{
 						game: g,
 					},
-					sourcePlayer:  h.base.game.CurrentPlayer,
+					sourcePlayer:  g.CurrentPlayer,
 					player:        pp,
 					aSideSelected: aSideSelected,
 				})
 			} else {
-
 			}
 		} else {
+			g.pushStateHolder(NewColonizeStateHolder(g))
 
 		}
 	case MOVE_BREAK_PACT:

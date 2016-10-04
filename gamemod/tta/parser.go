@@ -221,6 +221,22 @@ func parseCommand(game *TtaGame, command string) {
 				fmt.Println("OK")
 			}
 		}
+	case "colonize", "c":
+		if len(splitted) < 2 {
+			fmt.Println("Unknown command")
+		} else {
+			att := toAttachment(game, 1, splitted)
+			err := game.TryResolveMove(&Move{
+				FromPlayer: cp,
+				MoveType:   MOVE_COLONIZE,
+				Data:       att,
+			})
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println("OK")
+			}
+		}
 	case "incpop", "i":
 		err := game.TryResolveMove(&Move{
 			FromPlayer: cp,

@@ -25,6 +25,7 @@ const (
 	TECH_SPECIAL_WARFARE
 	TECH_SPECIAL_COLONIZE
 	TECH_SPECIAL_CONSTRUCTION
+	COLONY
 	TACTIC
 	PACT
 	WAR
@@ -960,47 +961,12 @@ func (p *PlayerBoard) getAvailableTactic() *CardSchool {
 	return nil
 }
 
-func (p *PlayerBoard) calcPowerFromTactic() int {
+func (p *PlayerBoard) calcPowerFromTactic(unitTypes [][]int) int {
 	tactic := p.getAvailableTactic()
 	if tactic == nil {
 		return 0
 	}
 
-	allTypes := p.iterateOverUnitsAndEverything(
-		func(school *CardSchool) interface{} {
-			if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
-				if school.age > tactic.age-2 {
-					return [][]int{[]int{1, 0, 0}, []int{1, 0, 0}}
-				} else {
-					return [][]int{[]int{0, 0, 0}, []int{1, 0, 0}}
-				}
-			} else if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
-				if school.age > tactic.age-2 {
-					return [][]int{[]int{0, 1, 0}, []int{0, 1, 0}}
-				} else {
-					return [][]int{[]int{0, 0, 0}, []int{0, 1, 0}}
-				}
-			} else if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
-				if school.age > tactic.age-2 {
-					return [][]int{[]int{0, 0, 1}, []int{0, 0, 1}}
-				} else {
-					return [][]int{[]int{0, 0, 0}, []int{0, 0, 1}}
-				}
-			} else {
-				return [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
-			}
-		},
-		func(a interface{}, b interface{}) interface{} {
-			type1 := a.([][]int)
-			type2 := b.([][]int)
-			result := [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
-			for i := 0; i < len(result); i++ {
-				for j := 0; j < len(result[0]); j++ {
-					result[i][j] = type1[i][j] + type2[i][j]
-				}
-			}
-			return result
-		}).([][]int)
 	requiredTypes := []int{0, 0, 0}
 	for _, t := range tactic.formation {
 		requiredTypes[t]++
@@ -1011,7 +977,7 @@ func (p *PlayerBoard) calcPowerFromTactic() int {
 		if requiredTypes[i] == 0 {
 			continue
 		}
-		s := allTypes[1][i] / requiredTypes[i]
+		s := unitTypes[1][i] / requiredTypes[i]
 		if s < allSet {
 			allSet = s
 		}
@@ -1021,7 +987,7 @@ func (p *PlayerBoard) calcPowerFromTactic() int {
 		if requiredTypes[i] == 0 {
 			continue
 		}
-		s := allTypes[0][i] / requiredTypes[i]
+		s := unitTypes[0][i] / requiredTypes[i]
 		if s < allSet {
 			upToDateSet = s
 		}
@@ -1049,8 +1015,47 @@ func (p *PlayerBoard) calcPower() int {
 		return ret
 	}, false)
 
-	fmt.Println("Strength from formation: ", p.calcPowerFromTactic())
-	power += p.calcPowerFromTactic()
+	tactic := p.getAvailableTactic()
+	if tactic != nil {
+		miliUnitTypes := p.iterateOverUnitsAndEverything(
+			func(school *CardSchool) interface{} {
+				if school.hasType(CARDTYPE_TECH_MILI_INFANTRY) {
+					if school.age > tactic.age-2 {
+						return [][]int{[]int{1, 0, 0}, []int{1, 0, 0}}
+					} else {
+						return [][]int{[]int{0, 0, 0}, []int{1, 0, 0}}
+					}
+				} else if school.hasType(CARDTYPE_TECH_MILI_CAVALRY) {
+					if school.age > tactic.age-2 {
+						return [][]int{[]int{0, 1, 0}, []int{0, 1, 0}}
+					} else {
+						return [][]int{[]int{0, 0, 0}, []int{0, 1, 0}}
+					}
+				} else if school.hasType(CARDTYPE_TECH_MILI_ARTILLERY) {
+					if school.age > tactic.age-2 {
+						return [][]int{[]int{0, 0, 1}, []int{0, 0, 1}}
+					} else {
+						return [][]int{[]int{0, 0, 0}, []int{0, 0, 1}}
+					}
+				} else {
+					return [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
+				}
+			},
+			func(a interface{}, b interface{}) interface{} {
+				type1 := a.([][]int)
+				type2 := b.([][]int)
+				result := [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
+				for i := 0; i < len(result); i++ {
+					for j := 0; j < len(result[0]); j++ {
+						result[i][j] = type1[i][j] + type2[i][j]
+					}
+				}
+				return result
+			}).([][]int)
+
+		fmt.Println("Strength from formation: ", p.calcPowerFromTactic(miliUnitTypes))
+		power += p.calcPowerFromTactic(miliUnitTypes)
+	}
 
 	if p.specialAbilityAvailable(TRAIT_JOAN_OF_ARC) {
 		power += p.sumOverUnitsAndEverything(func(school *CardSchool) interface{} {
@@ -3154,4 +3159,95 @@ func (p *PlayerBoard) politicalBreakPactLegal(pid int) bool {
 
 func (p *PlayerBoard) politicalBreakPact(pid int) {
 	p.game.removePact(pid)
+}
+
+func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
+	g := p.game
+	csm := g.cardStackManager
+	if len(detail.sacrificedStacks) != len(detail.sacrificedIndexes) ||
+		len(detail.sacrificedStacks) != len(detail.sacrificedCount) {
+		fmt.Println("calcColonizePower slices not aligned")
+		return -1
+	}
+	result := 0
+	tactic := p.getAvailableTactic()
+	unitTypes := [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
+	dupMap := make(map[int]bool)
+	for i, stack := range detail.sacrificedStacks {
+		index := detail.sacrificedIndexes[i]
+		count := detail.sacrificedCount[i]
+
+		if _, ok := dupMap[stack*10+index]; ok {
+			fmt.Println("calcColonizePower duplicate unit: ", stack, index)
+			return -1
+		}
+		dupMap[stack*10+index] = true
+
+		if stack != MILI_INFANTRY &&
+			stack != MILI_CAVALRY &&
+			stack != MILI_ARTILERY &&
+			stack != MILI_AIRFORCE {
+			fmt.Println("calcColonizePower invalid stack", stack)
+			return -1
+		}
+
+		school := p.getCardSchool(stack, index)
+		if school == nil {
+			fmt.Println("calcColonizePower card not found", stack, index)
+			return -1
+		}
+		workerCount := p.getWorkerCount(stack, index)
+		if count > workerCount {
+			fmt.Println("calcColonizePower No suck many units to sacrifice", count)
+			return -1
+		}
+
+		result += school.productionPower
+		if tactic != nil && stack != MILI_AIRFORCE {
+			if school.age > tactic.age-2 {
+				unitTypes[0][stack-MILI_INFANTRY] += 1
+			} else {
+				unitTypes[1][stack-MILI_INFANTRY] += 1
+			}
+		}
+	}
+
+	if tactic != nil {
+		result += p.calcPowerFromTactic(unitTypes)
+	}
+
+	dupMap2 := make(map[int]bool)
+	nonDefColCard := 0
+	for _, index := range detail.discardedMiliHands {
+		if index < 0 || index >= csm.getStackSize(p.stacks[MILI_HAND]) {
+			fmt.Println("calcColonizePower invalid military hand index:", index,
+				csm.getStackSize(p.stacks[MILI_HAND]))
+			return -1
+		}
+
+		if _, ok := dupMap2[index]; ok {
+			fmt.Println("calcColonizePower duplicated index:", index)
+			return -1
+		}
+		dupMap2[index] = true
+
+		card := csm.cardStacks[p.stacks[MILI_HAND]][index]
+		school := g.cardSchools[card.schoolId]
+		if school.hasType(CARDTYPE_DEFCOL) {
+			result += school.age
+		} else {
+			if p.specialAbilityAvailable(TRAIT_JAMES_COOK) {
+				if nonDefColCard >= 2 {
+					fmt.Println("calcColonizePower James cook ability limit reached")
+					return -1
+				}
+				nonDefColCard += 1
+				result += 1
+			} else {
+				fmt.Println("calcColonizePower cannot discard normal card without James cook")
+				return -1
+			}
+		}
+	}
+	return result
 }

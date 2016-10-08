@@ -165,7 +165,7 @@ func (h *CivilStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string
 		}
 		return true, ""
 	case MOVE_INC_POP:
-		if !p.canIncreasePop() {
+		if !p.civilIncreasePopLegal() {
 			return false, "Invalid incpop command"
 		}
 		return true, ""
@@ -264,7 +264,7 @@ func (h *CivilStateHolder) Resolve(m interface{}) {
 		index := move.Data[0]
 		p.civilPlayTactic(index)
 	case MOVE_INC_POP:
-		p.increasePop()
+		p.civilIncreasePop()
 	case MOVE_BUILD:
 		stack := move.Data[0]
 		index := move.Data[1]

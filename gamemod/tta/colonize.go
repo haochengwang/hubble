@@ -80,7 +80,7 @@ func (h *ColonizeStateHolder) TryParseColonizeMove(move *Move) (detail ColonizeD
 		detail.discardedMiliHands[i] = move.Data[index]
 	}
 
-	detail.colonizePower = g.players[g.CurrentPlayer].calcColonizePower(&detail)
+	detail.colonizePower = g.players[h.currentPlayer].calcColonizePower(&detail)
 	if detail.colonizePower < 0 {
 		return detail, fmt.Errorf("Invalid colonize command")
 	}
@@ -148,9 +148,12 @@ func (h *ColonizeStateHolder) Resolve(move interface{}) {
 		}
 	}
 
+	// All confirmed, at least playerCount - 1 players gave up
 	if confirmedPlayers == g.options.PlayerCount &&
 		giveUpPlayers >= g.options.PlayerCount-1 {
 		g.popStateHolder()
+		card := csm.cardStacks[g.pastEventsDeck][0]
+		school := g.cardSchools[card.schoolId]
 		if h.currentWinner >= 0 {
 			csm.processRequest(&MoveCardRequest{
 				sourcePosition: CardPosition{
@@ -162,6 +165,29 @@ func (h *ColonizeStateHolder) Resolve(move interface{}) {
 					position: csm.getStackSize(g.players[h.currentWinner].stacks[COLONY]),
 				},
 			})
+		}
+
+		winner := g.players[h.currentWinner]
+		winner.colonizeSuccess(&h.details[h.currentWinner])
+		winner.gainColony(card)
+		if school.hasTrait(TRAIT_DEVELOPED_TERRITORY) {
+			winner.gainTech(school.actionBonus)
+		} else if school.hasTrait(TRAIT_HISTORIC_TERRITORY) {
+			winner.gainCulture(school.actionBonus)
+		} else if school.hasTrait(TRAIT_INHABITED_TERRITORY) {
+			for i := 0; i < school.actionBonus; i++ {
+				if winner.canIncreasePop(0) {
+					winner.increasePop(0)
+				} else {
+					break
+				}
+			}
+		} else if school.hasTrait(TRAIT_STRATEGIC_TERRITORY) {
+			winner.drawMiliCards(school.actionBonus)
+		} else if school.hasTrait(TRAIT_VAST_TERRITORY) {
+			winner.gainCrop(school.actionBonus)
+		} else if school.hasTrait(TRAIT_WEALTHLY_TERRITORY) {
+			winner.gainResource(school.actionBonus)
 		}
 		return
 	} else {

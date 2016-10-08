@@ -2077,6 +2077,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionYellowToken: 1,
 		productionBlueToken:   1,
 		actionBonus:           3,
+		traits:                []int{TRAIT_DEVELOPED_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2085,6 +2086,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_TERRITORY},
 		productionHappiness: 1,
 		actionBonus:         6,
+		traits:              []int{TRAIT_HISTORIC_TERRITORY},
 		cardCounts:          []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2093,6 +2095,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TERRITORY},
 		productionYellowToken: 2,
 		actionBonus:           1,
+		traits:                []int{TRAIT_INHABITED_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2101,6 +2104,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:       []CardType{CARDTYPE_TERRITORY},
 		productionPower: 2,
 		actionBonus:     3,
+		traits:          []int{TRAIT_STRATEGIC_TERRITORY},
 		cardCounts:      []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2110,6 +2114,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionYellowToken: 3,
 		productionBlueToken:   -1,
 		actionBonus:           3,
+		traits:                []int{TRAIT_VAST_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2118,6 +2123,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_TERRITORY},
 		productionBlueToken: 3,
 		actionBonus:         5,
+		traits:              []int{TRAIT_WEALTHLY_TERRITORY},
 		cardCounts:          []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2127,6 +2133,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionYellowToken: 2,
 		productionBlueToken:   2,
 		actionBonus:           5,
+		traits:                []int{TRAIT_DEVELOPED_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2135,6 +2142,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_TERRITORY},
 		productionHappiness: 2,
 		actionBonus:         11,
+		traits:              []int{TRAIT_HISTORIC_TERRITORY},
 		cardCounts:          []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2143,6 +2151,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:             []CardType{CARDTYPE_TERRITORY},
 		productionYellowToken: 3,
 		actionBonus:           2,
+		traits:                []int{TRAIT_INHABITED_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2151,6 +2160,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:       []CardType{CARDTYPE_TERRITORY},
 		productionPower: 4,
 		actionBonus:     5,
+		traits:          []int{TRAIT_STRATEGIC_TERRITORY},
 		cardCounts:      []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2160,6 +2170,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		productionYellowToken: 4,
 		productionBlueToken:   -1,
 		actionBonus:           4,
+		traits:                []int{TRAIT_VAST_TERRITORY},
 		cardCounts:            []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
@@ -2168,6 +2179,7 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		cardTypes:           []CardType{CARDTYPE_TERRITORY},
 		productionBlueToken: 4,
 		actionBonus:         9,
+		traits:              []int{TRAIT_WEALTHLY_TERRITORY},
 		cardCounts:          []int{1, 1, 1},
 	})
 

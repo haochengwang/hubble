@@ -261,8 +261,10 @@ func (g *TtaGame) initBasicCards(options *TtaGameOptions) {
 			},
 		})
 	}
+
+	// REMOVE THIS Colonize test
 	csm.processRequest(&AddCardRequest{
-		schoolId: 227,
+		schoolId: 231,
 		position: CardPosition{
 			stackId:  g.nowEventsDeck,
 			position: csm.getStackSize(g.nowEventsDeck),

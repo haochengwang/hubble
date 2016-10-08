@@ -617,6 +617,36 @@ func (p *PlayerBoard) realignWhiteRedTokens() {
 	}
 }
 
+func (p *PlayerBoard) modifyFreeBlueToken(amount int, forced bool) {
+	fmt.Println("modifyFreeBlueToken", amount)
+	blue := p.getFreeBlueTokens()
+	if !forced {
+		if blue+amount < 0 {
+			amount = -blue
+		}
+		p.specialTokenManager.processRequest(&AddTokenRequest{
+			bankId:     FREE_BLUE,
+			tokenType:  TOKEN_BLUE,
+			tokenCount: amount,
+		})
+	}
+}
+
+func (p *PlayerBoard) modifyFreeYellowToken(amount int, forced bool) {
+	fmt.Println("modifyFreeYellowToken", amount)
+	yellow := p.getFreeYellowTokens()
+	if !forced {
+		if yellow+amount < 0 {
+			amount = -yellow
+		}
+		p.specialTokenManager.processRequest(&AddTokenRequest{
+			bankId:     FREE_YELLOW,
+			tokenType:  TOKEN_YELLOW,
+			tokenCount: amount,
+		})
+	}
+}
+
 func (p *PlayerBoard) clearupTurn() {
 	csm := p.game.cardStackManager
 	p.realignWhiteRedTokens()
@@ -822,6 +852,10 @@ func (p *PlayerBoard) iterateOverUnitsAndEverything(
 	}
 	// Wonders
 	for _, card := range csm.cardStacks[p.stacks[WONDER_COMPLETED]] {
+		result = reducer(result, f(allSchools[card.schoolId]))
+	}
+	// Colonies
+	for _, card := range csm.cardStacks[p.stacks[COLONY]] {
 		result = reducer(result, f(allSchools[card.schoolId]))
 	}
 	// Pacts
@@ -1756,7 +1790,7 @@ func (p *PlayerBoard) canPlayEngineeringGenius(card Card) bool {
 }
 
 func (p *PlayerBoard) canPlayFrugality(card Card) bool {
-	return p.canIncreasePop()
+	return p.civilIncreasePopLegal()
 }
 
 func (p *PlayerBoard) canPlayRichLand(card Card, stacksAndIndexes []int) bool {
@@ -2047,7 +2081,7 @@ func (p *PlayerBoard) playFrugality(card Card, index int, attachment interface{}
 			position: index,
 		},
 	})
-	p.increasePop()
+	p.civilIncreasePop()
 
 	school := p.game.cardSchools[card.schoolId]
 	p.gainCrop(school.actionBonus)
@@ -2317,19 +2351,10 @@ func (p *PlayerBoard) playHand(index int, attachment interface{}) {
 	p.playCard(card, index, attachment)
 }
 
-func (p *PlayerBoard) canIncreasePop() bool {
-	if p.getUsableWhiteTokens() < 1 {
-		fmt.Println("Increase pop no white token")
-		return false
-	}
+func (p *PlayerBoard) canIncreasePop(cropCost int) bool {
 	if p.getFreeYellowTokens() <= 0 {
 		fmt.Println("Increase pop no free yellow token")
 		return false
-	}
-	cropCost := p.getIncreasePopBaseCost()
-
-	if p.specialAbilityAvailable(TRAIT_MOSES) {
-		cropCost -= 1
 	}
 	if p.getCropTotal() < cropCost {
 		fmt.Println("Increase pop not enough crop")
@@ -2338,12 +2363,7 @@ func (p *PlayerBoard) canIncreasePop() bool {
 	return true
 }
 
-func (p *PlayerBoard) increasePop() {
-	p.removeUsableWhiteTokens(1)
-	cropCost := p.getIncreasePopBaseCost()
-	if p.specialAbilityAvailable(TRAIT_MOSES) {
-		cropCost -= 1
-	}
+func (p *PlayerBoard) increasePop(cropCost int) {
 	fmt.Println("increasePop ", cropCost)
 	p.spendCrop(cropCost)
 	p.specialTokenManager.processRequest(&MoveTokenRequest{
@@ -2352,6 +2372,32 @@ func (p *PlayerBoard) increasePop() {
 		tokenType:    TOKEN_YELLOW,
 		tokenCount:   1,
 	})
+}
+
+func (p *PlayerBoard) civilIncreasePopLegal() bool {
+	if p.getUsableWhiteTokens() < 1 {
+		fmt.Println("Increase pop no white token")
+		return false
+	}
+
+	cropCost := p.getIncreasePopBaseCost()
+
+	if p.specialAbilityAvailable(TRAIT_MOSES) {
+		cropCost -= 1
+	}
+
+	return p.canIncreasePop(cropCost)
+}
+
+func (p *PlayerBoard) civilIncreasePop() {
+	p.removeUsableWhiteTokens(1)
+	cropCost := p.getIncreasePopBaseCost()
+
+	if p.specialAbilityAvailable(TRAIT_MOSES) {
+		cropCost -= 1
+	}
+
+	p.increasePop(cropCost)
 }
 
 func (p *PlayerBoard) getModifiedCost(card Card) int {
@@ -3014,6 +3060,7 @@ func (p *PlayerBoard) canDisband(stack, index int) bool {
 }
 
 func (p *PlayerBoard) disband(stack, index int, toFreeWorkerPool bool) {
+	fmt.Println("disband", stack, index)
 	csm := p.game.cardStackManager
 	card := csm.cardStacks[p.stacks[stack]][index]
 	p.game.cardTokenManager.processRequest(&RemoveTokenRequest{
@@ -3250,4 +3297,39 @@ func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
 		}
 	}
 	return result
+}
+
+func (p *PlayerBoard) colonizeSuccess(detail *ColonizeDetail) {
+	for i, stack := range detail.sacrificedStacks {
+		index := detail.sacrificedIndexes[i]
+		count := detail.sacrificedCount[i]
+
+		for j := 0; j < count; j++ {
+			p.disband(stack, index, false)
+		}
+	}
+
+	p.discardMiliCards(detail.discardedMiliHands)
+}
+
+func (p *PlayerBoard) gainColony(card Card) {
+	school := p.game.cardSchools[card.schoolId]
+	if school.productionBlueToken != 0 {
+		p.modifyFreeBlueToken(school.productionBlueToken, false)
+	}
+
+	if school.productionYellowToken != 0 {
+		p.modifyFreeYellowToken(school.productionYellowToken, false)
+	}
+}
+
+func (p *PlayerBoard) loseColony(card Card) {
+	school := p.game.cardSchools[card.schoolId]
+	if school.productionBlueToken != 0 {
+		p.modifyFreeBlueToken(-school.productionBlueToken, false)
+	}
+
+	if school.productionYellowToken != 0 {
+		p.modifyFreeYellowToken(-school.productionYellowToken, false)
+	}
 }

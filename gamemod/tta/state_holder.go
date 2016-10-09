@@ -71,6 +71,11 @@ func (h *TurnStartStateHolder) Resolve(move interface{}) {
 			game: g,
 		},
 	})
+	g.pushStateHolder(&CaesarAbilityStateHolder{
+		base: BaseStateHolder{
+			game: g,
+		},
+	})
 	g.pushStateHolder(&PoliticalStateHolder{
 		base: BaseStateHolder{
 			game: g,
@@ -346,6 +351,7 @@ func (h *PoliticalStateHolder) IsMoveLegal(m interface{}) (legal bool, reason st
 func (h *PoliticalStateHolder) Resolve(m interface{}) {
 	fmt.Println("PoliticalStateHolder.Resolve")
 	g := h.base.game
+	csm := g.cardStackManager
 	g.popStateHolder()
 	if m == nil {
 		return
@@ -387,11 +393,12 @@ func (h *PoliticalStateHolder) Resolve(m interface{}) {
 					player:        pp,
 					aSideSelected: aSideSelected,
 				})
-			} else {
+			} else if school.hasType(CARDTYPE_WAR) {
 			}
 		} else {
-			g.pushStateHolder(NewColonizeStateHolder(g))
-
+			card := csm.getFirstCard(g.pastEventsDeck)
+			school := g.cardSchools[card.schoolId]
+			g.pushStateHolder(NewEventStateHolder(g, school))
 		}
 	case MOVE_BREAK_PACT:
 		pid := move.Data[0]
@@ -459,9 +466,6 @@ func (h *DiscardMilitaryCardsStateHolder) IsMoveLegal(m interface{}) (legal bool
 func (h *DiscardMilitaryCardsStateHolder) Resolve(m interface{}) {
 	if !h.IsPending() {
 		h.base.game.popStateHolder()
-		return
-	}
-	if m == nil {
 		return
 	}
 	move := m.(*Move)
@@ -694,4 +698,58 @@ func (h *GainCropResourceStateHolder) Resolve(m interface{}) {
 		p.gainCrop(c)
 	}
 	h.base.game.popStateHolder()
+}
+
+type CaesarAbilityStateHolder struct {
+	base BaseStateHolder
+}
+
+func (h *CaesarAbilityStateHolder) IsPending() bool {
+	g := h.base.game
+	p := g.players[g.CurrentPlayer]
+	return p.politicalPossibleUseCaesarAbility()
+}
+
+func (h *CaesarAbilityStateHolder) IsMoveLegal(m interface{}) (legal bool, reason string) {
+	move := m.(*Move)
+	g := h.base.game
+	if move.FromPlayer != g.CurrentPlayer {
+		return false, "Not valid user."
+	}
+	switch move.MoveType {
+	case MOVE_GENERAL_OP:
+		if len(move.Data) != 1 {
+			return false, "Invalid op command."
+		}
+		return true, ""
+	case MOVE_END:
+		return true, ""
+	}
+	return false, "CaesarAbilityStateHolder: command not supported"
+}
+
+func (h *CaesarAbilityStateHolder) Resolve(m interface{}) {
+	if !h.IsPending() {
+		h.base.game.popStateHolder()
+		return
+	}
+	move := m.(*Move)
+	g := h.base.game
+	p := g.players[g.CurrentPlayer]
+	switch move.MoveType {
+	case MOVE_GENERAL_OP:
+		if move.Data[0] != 0 {
+			h.base.game.popStateHolder()
+			p.politicalMarkCaesarAbilityUsed()
+			g.pushStateHolder(&PoliticalStateHolder{
+				base: BaseStateHolder{
+					game: g,
+				},
+			})
+		} else {
+			h.base.game.popStateHolder()
+		}
+	case MOVE_END:
+		h.base.game.popStateHolder()
+	}
 }

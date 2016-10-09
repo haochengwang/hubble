@@ -1744,60 +1744,70 @@ func InitBasicCardSchools() (result map[int]*CardSchool) {
 		schoolName: "Development of Agriculture",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_AGRICULTURE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Civilization",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_CIVILIZATION},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Crafts",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_CRAFTS},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Markets",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_MARKETS},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Politics",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_POLITICS},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Religion",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_RELIGION},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Science",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_SCIENCE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Settlement",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_SETTLEMENT},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Trade Route",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_TRADE_ROUTE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{
 		schoolName: "Development of Warfare",
 		age:        0,
 		cardTypes:  []CardType{CARDTYPE_EVENT},
+		traits:     []int{TRAIT_DEVELOPMENT_OF_WARFARE},
 		cardCounts: []int{1, 1, 1},
 	})
 	schools = append(schools, &CardSchool{

@@ -32,6 +32,7 @@ const (
 	PENDING
 	HAND
 	MILI_HAND
+	CAESAR_ABILITY_USED
 	USER_STACK_SIZE
 )
 
@@ -87,9 +88,13 @@ const (
 type PlayerBoard struct {
 	game *TtaGame
 
-	stacks              []int
-	techTokenManager    *TokenBankUniversalManager
+	stacks []int
+	// Whether each kind of tech is taken
+	techTokenManager *TokenBankUniversalManager
+	// Special information related to the player, also stores per-game
+	// ability usage
 	specialTokenManager *TokenBankUniversalManager
+	// Per-turn ability usage, will be cleared at the end of each turn
 	perTurnTokenManager *TokenBankUniversalManager
 }
 
@@ -3220,6 +3225,7 @@ func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
 	tactic := p.getAvailableTactic()
 	unitTypes := [][]int{[]int{0, 0, 0}, []int{0, 0, 0}}
 	dupMap := make(map[int]bool)
+	sacrificed := false
 	for i, stack := range detail.sacrificedStacks {
 		index := detail.sacrificedIndexes[i]
 		count := detail.sacrificedCount[i]
@@ -3228,6 +3234,11 @@ func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
 			fmt.Println("calcColonizePower duplicate unit: ", stack, index)
 			return -1
 		}
+		if count <= 0 {
+			fmt.Println("calcColonizePower count should be > 0, actual", count)
+			return -1
+		}
+		sacrificed = true
 		dupMap[stack*10+index] = true
 
 		if stack != MILI_INFANTRY &&
@@ -3245,7 +3256,7 @@ func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
 		}
 		workerCount := p.getWorkerCount(stack, index)
 		if count > workerCount {
-			fmt.Println("calcColonizePower No suck many units to sacrifice", count)
+			fmt.Println("calcColonizePower No such many units to sacrifice", count)
 			return -1
 		}
 
@@ -3257,6 +3268,11 @@ func (p *PlayerBoard) calcColonizePower(detail *ColonizeDetail) int {
 				unitTypes[1][stack-MILI_INFANTRY] += 1
 			}
 		}
+	}
+
+	if !sacrificed {
+		fmt.Println("calcColonizePower at least one units be sacrificed")
+		return -1
 	}
 
 	if tactic != nil {
@@ -3332,4 +3348,20 @@ func (p *PlayerBoard) loseColony(card Card) {
 	if school.productionYellowToken != 0 {
 		p.modifyFreeYellowToken(-school.productionYellowToken, false)
 	}
+}
+
+func (p *PlayerBoard) politicalPossibleUseCaesarAbility() bool {
+	if p.specialAbilityAvailable(TRAIT_JULIUS_CAESAR) {
+		return false
+	}
+
+	return p.specialTokenManager.getTokenCount(CAESAR_ABILITY_USED, TOKEN_DEFAULT) <= 0
+}
+
+func (p *PlayerBoard) politicalMarkCaesarAbilityUsed() {
+	p.specialTokenManager.processRequest(&AddTokenRequest{
+		bankId:     CAESAR_ABILITY_USED,
+		tokenType:  TOKEN_DEFAULT,
+		tokenCount: 1,
+	})
 }
